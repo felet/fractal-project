@@ -1,16 +1,17 @@
-#include "loadobj.h"
+//#include "loadobj.h"
 #include "GL_utilities.h"
 #include "LoadTGA.h"
 #include "VectorUtils2.h"
 #include "assert.h"
+#include <list>
 
 float lookAtPosX = 0;
-float lookAtPosY = 9;
-float lookAtPosZ = -15;
+float lookAtPosY = 0;
+float lookAtPosZ = 0;
 
 float cameraPosX = 0;
-float cameraPosY = 9;
-float cameraPosZ = -16;
+float cameraPosY = 0.5;
+float cameraPosZ = -2;
 float drot = 0;
 
 #define near 1.0
@@ -42,45 +43,28 @@ GLuint program;
 GLuint *tex; //Texture pointer
 
 //TODO : Create cube 
-unsigned int cubeID;
-unsigned int numIndices = 6;
-GLfloat vertices[] = {
-    // Front face  
-    -0.5, -0.5,  0.5,  
-     0.5, -0.5,  0.5,  
-     0.5,  0.5,  0.5,  
-    -0.5,  0.5,  0.5,  
-      
-    // Back face  
-    -0.5, -0.5, -0.5,  
-    -0.5,  0.5, -0.5,  
-     0.5,  0.5, -0.5,  
-     0.5, -0.5, -0.5,  
-      
-    // Top face  
-    -0.5,  0.5, -0.5,  
-    -0.5,  0.5,  0.5,  
-     0.5,  0.5,  0.5,  
-     0.5,  0.5, -0.5,  
-      
-    // Bottom face  
-    -0.5, -0.5, -0.5,  
-     0.5, -0.5, -0.5,  
-     0.5, -0.5,  0.5,  
-    -0.5, -0.5,  0.5,  
-      
-    // Right face  
-     0.5, -0.5, -0.5,  
-     0.5,  0.5, -0.5,  
-     0.5,  0.5,  0.5,  
-     0.5, -0.5,  0.5,  
-      
-    // Left face  
-    -0.5, -0.5, -0.5,  
-    -0.5, -0.5,  0.5,  
-    -0.5,  0.5,  0.5,  
-    -0.5,  0.5, -0.5     
-};
+unsigned int vertexID;
+unsigned int indexID;
+unsigned int numIndices = 36;
+unsigned int numVertices = 24;
+GLfloat vertices[8][3] = {
+    {-0.5,-0.5,-0.5},
+    {0.5,-0.5,-0.5},
+    {0.5,0.5,-0.5},
+    {-0.5,0.5,-0.5},
+    {-0.5,-0.5,0.5},
+    {0.5,-0.5,0.5},
+    {0.5,0.5,0.5},
+{-0.5,0.5,0.5}};
+
+////list<cube> cubelist;
+
+GLubyte cubeIndices[36] = {0,3,2, 0,2,1,
+                           2,3,7, 2,7,6,
+                           0,4,7, 0,7,3,
+                           1,2,6, 1,6,5,
+                           4,5,6, 4,6,7,
+                           0,1,5, 0,5,4};
 
 void lookAt(GLfloat px, GLfloat py, GLfloat pz,
                     GLfloat lx, GLfloat ly, GLfloat lz,
@@ -115,19 +99,23 @@ void init(void)
     //m1 = LoadModelPlus("name.obj", program, "in_Position", "in_Normal", "inTexCoord");
 
 	// Allocate and activate Vertex Array Objects
-	glGenVertexArrays(1, &cubeID);
-	glBindVertexArray(cubeID);
+	glGenVertexArrays(1, &vertexID);
+	glBindVertexArray(vertexID);
 
 	// Allocate Vertex Buffer Objects
-	glGenBuffers(1, &cubeID);
+	glGenBuffers(1, &vertexID);
+	glGenBuffers(1, &indexID);
 
     // VBO for vertex data
-	glBindBuffer(GL_ARRAY_BUFFER, cubeID);
-	//RM glBufferData(GL_ARRAY_BUFFER, 2*9*sizeof(GLfloat), vertices, GL_STATIC_DRAW);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, vertexID);
+	glBufferData(GL_ARRAY_BUFFER, numVertices*sizeof(GLfloat), vertices, GL_STATIC_DRAW);
 	glVertexAttribPointer(glGetAttribLocation(program, "in_Position"), 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(glGetAttribLocation(program, "in_Position"));
-	printError("init vertex buffer object(s)");
+	printError("init vertices");
+
+    //VBO for index data
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexID);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, numIndices*sizeof(GLubyte), cubeIndices, GL_STATIC_DRAW);
 }
 
 
@@ -135,7 +123,7 @@ void display(void)
 {
 	keyboardMovement();
 
-    //float t = glutGet(GLUT_ELAPSED_TIME)/1000.0f; //Time variable
+    float t = glutGet(GLUT_ELAPSED_TIME)/1000.0f; //Time variable
     int settexture = 0; //Use no texture, settexture = 1 to enable texture
 
     // clear the screen
@@ -167,7 +155,10 @@ void display(void)
     glUniform1iv(glGetUniformLocation(program, "isDirectional"), 4, isDirectional);
 
 	// Initialize matrices
+    // TODO: Rotera ej ljuskällor
     T(0, 0, 0, trans);
+    Ry(t,rot);
+    Mult(rot, trans, trans);
     Mult(camera, trans, totalMatrix); 
     Mult(projectionMatrix, totalMatrix, totalMatrix);
     
@@ -178,10 +169,10 @@ void display(void)
     glUniformMatrix4fv(glGetUniformLocation(program, "transformation"), 1, GL_TRUE, trans);
 
     // Cube
-    glBindVertexArray(cubeID);			// Select VAO
-    glUniform3f(glGetUniformLocation(program, "color"), 0.3,0.0,0.0);
-	glDrawArrays(GL_TRIANGLES, 0, numIndices);	// Draw object 
-    
+    glBindVertexArray(vertexID);			// Select VAO
+    glUniform3f(glGetUniformLocation(program, "color"), 1.0,1.0,0.0);
+    glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_BYTE, NULL);
+
     printError("display");
     glutSwapBuffers();
 }

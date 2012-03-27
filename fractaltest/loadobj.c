@@ -6,6 +6,8 @@
 
 // Extended version with LoadModelPlus
 
+extern "C"{
+
 #include "loadobj.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -867,4 +869,5 @@ Model* LoadModelPlus(char* name,
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, m->numIndices*sizeof(GLuint), m->indexArray, GL_STATIC_DRAW);
 	
 	return m;
+}
 }

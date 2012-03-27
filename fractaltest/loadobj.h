@@ -1,6 +1,11 @@
+
+
 #ifndef loadobj_h
 #define loadobj_h
 
+#ifdef __cplusplus
+    extern "C" {
+#endif
 #ifdef __APPLE__
 	#include <OpenGL/gl3.h>
 #else
@@ -32,5 +37,8 @@ Model* LoadModelPlus(char* name,
 			char* vertexVariableName,
 			char* normalVariableName,
 			char* texCoordVariableName);
-
+#ifdef __cplusplus
+}
 #endif
+#endif
+
