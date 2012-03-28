@@ -3,7 +3,7 @@
 #include "LoadTGA.h"
 #include "VectorUtils2.h"
 #include "assert.h"
-#include <list>
+//#include <list>
 
 float lookAtPosX = 0;
 float lookAtPosY = 0;
@@ -57,7 +57,15 @@ GLfloat vertices[8][3] = {
     {0.5,0.5,0.5},
 {-0.5,0.5,0.5}};
 
-////list<cube> cubelist;
+struct Cube{
+    GLfloat v[8][3];
+};
+
+struct CubeList{
+    struct Cube cube;
+    struct CubeList* next;
+};
+
 
 GLubyte cubeIndices[36] = {0,3,2, 0,2,1,
                            2,3,7, 2,7,6,
@@ -73,6 +81,10 @@ void lookAt(GLfloat px, GLfloat py, GLfloat pz,
 void OnTimer(int value);
 void keyboardMovement();
 
+struct CubeList *list_create(struct Cube data);
+struct CubeList *list_add(struct CubeList *node, struct Cube data);
+int list_remove(struct CubeList *list, struct CubeList *node);
+struct Cube list_get_first(struct CubeList *list);
 void init(void)
 {
 	dumpInfo();
@@ -89,7 +101,7 @@ void init(void)
 
 	// Load and compile shader
 	program = loadShaders("fract.vert", "fract.frag");
-	printError("init shader");
+    printError("init shader");
 
     // Load texture
 	//LoadTGATextureSimple("name.tga", &tex);
@@ -116,6 +128,15 @@ void init(void)
     //VBO for index data
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexID);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, numIndices*sizeof(GLubyte), cubeIndices, GL_STATIC_DRAW);
+    struct Cube test;
+    memcpy(test.v, vertices, 24*sizeof(GLfloat));
+    struct Cubelist *mylist = list_create(test);
+    test.v[0][0] = 5.0;
+    struct Cube test2 = list_get_first(mylist);
+    int i,j;
+    for (i=0;i<3;i++)
+        for(j=0;j<8;j++)
+    printf("\n %f", test2.v[j][i]);
 }
 
 
@@ -170,7 +191,7 @@ void display(void)
 
     // Cube
     glBindVertexArray(vertexID);			// Select VAO
-    glUniform3f(glGetUniformLocation(program, "color"), 1.0,1.0,0.0);
+    glUniform3f(glGetUniformLocation(program, "inColor"), 1.0,1.0,0.0);
     glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_BYTE, NULL);
 
     printError("display");
@@ -187,7 +208,47 @@ int main(int argc, char *argv[])
 	glutTimerFunc(20, &OnTimer, 0);
 	glutMainLoop();
 }
+/*
+CubeList *list_create()
+{
+	CubeList *node;
+	if(!(node=malloc(sizeof(CubeList)))) return NULL;
+	node->cube=NULL;
+	node->next=NULL;
+	return node;
+}
+*/
+struct CubeList *list_create(struct Cube data)
+{
+	struct CubeList *node;
+    node = malloc(sizeof(struct CubeList));
+	//node->cube = (struct Cube) malloc(sizeof(struct Cube));
+    node->cube = data;
+	node->next=NULL;
+	return node;
+}
 
+struct CubeList *list_add(struct CubeList *node, struct Cube data)
+{
+	struct CubeList *newnode;
+        newnode=list_create(data);
+        newnode->next = node->next;
+        node->next = newnode;
+	return newnode;
+}
+
+int list_remove(struct CubeList *list, struct CubeList *node)
+{
+	while(list->next && list->next!=node) list=list->next;
+	if(list->next) {
+		list->next=node->next;
+        free(node);
+		return 0;		
+	} else return -1;
+}
+struct Cube list_get_first(struct CubeList *list){
+    return list->cube;
+}
 void lookAt(GLfloat px, GLfloat py, GLfloat pz,
                     GLfloat lx, GLfloat ly, GLfloat lz,
                     GLfloat vx, GLfloat vy, GLfloat vz,
