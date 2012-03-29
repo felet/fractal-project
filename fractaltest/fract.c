@@ -48,24 +48,28 @@ unsigned int indexID;
 unsigned int numIndices = 36;
 unsigned int numVertices = 24;
 GLfloat vertices[8][3] = {
-    {-0.5,-0.5,-0.5},
-    {0.5,-0.5,-0.5},
-    {0.5,0.5,-0.5},
-    {-0.5,0.5,-0.5},
-    {-0.5,-0.5,0.5},
-    {0.5,-0.5,0.5},
-    {0.5,0.5,0.5},
+    {-0.5,-0.5,-0.5}, 
+    {0.5,-0.5,-0.5}, 
+    {0.5,0.5,-0.5}, 
+    {-0.5,0.5,-0.5}, 
+    {-0.5,-0.5,0.5}, 
+    {0.5,-0.5,0.5}, 
+    {0.5,0.5,0.5}, 
 {-0.5,0.5,0.5}};
 
-struct Cube{
+typedef struct _Cube{
+unsigned int vertexArrayObjID;
+unsigned int vertexBufferObjID;
+unsigned int indexBufferObjID;
     GLfloat v[8][3];
-};
+} Cube;
 
-struct CubeList{
-    struct Cube cube;
+typedef struct _CubeList{
+    Cube cube;
     struct CubeList* next;
-};
+} CubeList;
 
+CubeList *mylist;
 
 GLubyte cubeIndices[36] = {0,3,2, 0,2,1,
                            2,3,7, 2,7,6,
@@ -81,10 +85,16 @@ void lookAt(GLfloat px, GLfloat py, GLfloat pz,
 void OnTimer(int value);
 void keyboardMovement();
 
-struct CubeList *list_create(struct Cube data);
-struct CubeList *list_add(struct CubeList *node, struct Cube data);
-int list_remove(struct CubeList *list, struct CubeList *node);
-struct Cube list_get_first(struct CubeList *list);
+CubeList *list_create(Cube data);
+CubeList *list_add(CubeList *node, Cube data);
+int list_remove(CubeList *list, CubeList *node);
+Cube list_get_current(CubeList *list);
+CubeList *list_get_next(CubeList *list);
+void createCubes(Cube o, CubeList *list);
+void uploadCube(Cube *c);
+bool *list_not_empty(CubeList *list);
+void drawCubes(const CubeList *l, GLfloat *totalMatrix);
+
 void init(void)
 {
 	dumpInfo();
@@ -128,20 +138,23 @@ void init(void)
     //VBO for index data
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexID);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, numIndices*sizeof(GLubyte), cubeIndices, GL_STATIC_DRAW);
-    struct Cube test;
+    Cube test;
     memcpy(test.v, vertices, 24*sizeof(GLfloat));
-    struct Cubelist *mylist = list_create(test);
-    test.v[0][0] = 5.0;
-    struct Cube test2 = list_get_first(mylist);
+    test.vertexArrayObjID = vertexID;
+    test.vertexBufferObjID = 12;
+    test.indexBufferObjID = 15;
+    mylist = list_create(test);
+    createCubes(test,mylist);
+
+ /*   mylist = list_get_next(mylist);
+    Cube test2 = list_get_current(mylist);
     int i,j;
     for (i=0;i<3;i++)
         for(j=0;j<8;j++)
-    printf("\n %f", test2.v[j][i]);
+    printf("\n %f", test2.v[j][i]); */
 }
 
-
-void display(void)
-{
+void display(){
 	keyboardMovement();
 
     float t = glutGet(GLUT_ELAPSED_TIME)/1000.0f; //Time variable
@@ -190,10 +203,12 @@ void display(void)
     glUniformMatrix4fv(glGetUniformLocation(program, "transformation"), 1, GL_TRUE, trans);
 
     // Cube
-    glBindVertexArray(vertexID);			// Select VAO
+  //  glBindVertexArray(vertexID);			// Select VAO
     glUniform3f(glGetUniformLocation(program, "inColor"), 1.0,1.0,0.0);
-    glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_BYTE, NULL);
+ //   glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_BYTE, NULL);
 
+	drawCubes(mylist, totalMatrix);
+	
     printError("display");
     glutSwapBuffers();
 }
@@ -207,6 +222,7 @@ int main(int argc, char *argv[])
 	init();
 	glutTimerFunc(20, &OnTimer, 0);
 	glutMainLoop();
+	return 0;
 }
 /*
 CubeList *list_create()
@@ -218,26 +234,156 @@ CubeList *list_create()
 	return node;
 }
 */
-struct CubeList *list_create(struct Cube data)
+/*
+nya <=> gamla
+5 <=> 0
+7 <=> 1
+3 <=> 2
+1 <=> 3
+4 <=> 4
+6 <=> 5
+2 <=> 6
+0 <=> 7
+- - -
++ - -
++ + -
+- + -
+- - +
++ - +
++ + +
+- + +
+*/
+void drawCubes(const CubeList *l, GLfloat *totalMatrix){
+	CubeList *tl = l;
+	Cube c;
+	GLfloat trans[16], color = 0, xspace = 0;	
+	while(tl != NULL)
+	{
+		c = tl->cube;
+		T(xspace,0,0, trans);
+		Mult(trans,totalMatrix, totalMatrix);
+    	glUniformMatrix4fv(glGetUniformLocation(program, "totalMatrix"), 1, GL_TRUE, totalMatrix);
+		glUniform3f(glGetUniformLocation(program, "inColor"), color, color/2.0 ,0.0);
+    	glBindVertexArray(c.vertexArrayObjID);    // Select VAO
+    	glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_BYTE, 0L);
+		tl = tl->next;
+		color = color + 0.1;
+		xspace = xspace + 0.01;
+	}
+}
+
+void createCubes(Cube o, CubeList *list){
+double length = abs(o.v[7][0] - o.v[6][0]);
+double radius = length/6.0;
+
+GLfloat middle[3];
+middle[0] = o.v[7][0] + radius;
+middle[1] = o.v[7][1] + radius;
+middle[2] = o.v[7][2] + radius;
+Cube new;
+
+new.v[0][0] = middle[0] - radius;
+new.v[0][1] = middle[1] - radius;
+new.v[0][2] = middle[2] - radius;
+
+new.v[1][0] = middle[0] + radius;
+new.v[1][1] = middle[1] - radius;
+new.v[1][2] = middle[2] - radius;
+
+new.v[2][0] = middle[0] + radius;
+new.v[2][1] = middle[1] + radius;
+new.v[2][2] = middle[2] - radius;
+
+new.v[3][0] = middle[0] - radius;
+new.v[3][1] = middle[1] + radius;
+new.v[3][2] = middle[2] - radius;
+
+new.v[4][0] = middle[0] - radius;
+new.v[4][1] = middle[1] - radius;
+new.v[4][2] = middle[2] + radius;
+
+new.v[5][0] = middle[0] + radius;
+new.v[5][1] = middle[1] - radius;
+new.v[5][2] = middle[2] + radius;
+
+new.v[6][0] = middle[0] + radius;
+new.v[6][1] = middle[1] + radius;
+new.v[6][2] = middle[2] + radius;
+
+new.v[7][0] = middle[0] - radius;
+new.v[7][1] = middle[1] + radius;
+new.v[7][2] = middle[2] + radius;
+/*
+printf("\n mittpunkt x: y: z: %f", new.v[j][i]);
+int i,j;
+    for (i=0;i<3;i++)
+        for(j=0;j<8;j++)
+    printf("\n %f", new.v[j][i]);
+ */
+uploadCube(&new);
+list_add(list,new);
+
+Cube morecubes[26];
+int i, trans[16];
+for (i=0;i<26;i++)
 {
-	struct CubeList *node;
-    node = malloc(sizeof(struct CubeList));
-	//node->cube = (struct Cube) malloc(sizeof(struct Cube));
-    node->cube = data;
+	morecubes[i] = new;
+	uploadCube(&morecubes[i]);
+	list_add(list,morecubes[i]);
+}
+}
+
+void uploadCube(Cube *c){
+    glGenVertexArrays(1, &c->vertexArrayObjID);
+    glGenBuffers(1, &c->vertexBufferObjID);
+    glGenBuffers(1, &c->indexBufferObjID);
+  //  glGenBuffers(1, &c.normalBufferObjID);
+    
+    glBindVertexArray(c->vertexArrayObjID);
+
+    // VBO for vertex data
+    glBindBuffer(GL_ARRAY_BUFFER, c->vertexBufferObjID);
+    glBufferData(GL_ARRAY_BUFFER, 24*3*sizeof(GLfloat), c->v, GL_STATIC_DRAW);
+    glVertexAttribPointer(glGetAttribLocation(program, "in_Position"), 3, GL_FLOAT, GL_FALSE, 0, 0); 
+    glEnableVertexAttribArray(glGetAttribLocation(program, "in_Position"));
+
+    // VBO for normal data
+  /*  glBindBuffer(GL_ARRAY_BUFFER, bunnyNormalBufferObjID);
+    glBufferData(GL_ARRAY_BUFFER, m->numVertices*3*sizeof(GLfloat), m->normalArray, GL_STATIC_DRAW);
+    glVertexAttribPointer(glGetAttribLocation(program, "inNormal"), 3, GL_FLOAT, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(glGetAttribLocation(program, "inNormal"));
+   */ 
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, c->indexBufferObjID);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, 36*sizeof(GLuint), cubeIndices, GL_STATIC_DRAW);
+
+    printf("\n array id: %p \n", c->vertexArrayObjID);
+}
+bool *list_not_empty(CubeList *list){
+ return (list->next != NULL);
+}
+CubeList *list_get_next(CubeList *list){
+	return list->next;
+}
+CubeList *list_create(Cube data)
+{
+	CubeList *node;
+    	node = malloc(sizeof(CubeList));
+	//node->cube = (Cube) malloc(sizeof(Cube));
+    	node->cube = data;
 	node->next=NULL;
 	return node;
 }
 
-struct CubeList *list_add(struct CubeList *node, struct Cube data)
+CubeList *list_add(CubeList *node, Cube data)
 {
-	struct CubeList *newnode;
+	CubeList *newnode;
         newnode=list_create(data);
         newnode->next = node->next;
         node->next = newnode;
 	return newnode;
 }
 
-int list_remove(struct CubeList *list, struct CubeList *node)
+int list_remove(CubeList *list, CubeList *node)
 {
 	while(list->next && list->next!=node) list=list->next;
 	if(list->next) {
@@ -246,7 +392,7 @@ int list_remove(struct CubeList *list, struct CubeList *node)
 		return 0;		
 	} else return -1;
 }
-struct Cube list_get_first(struct CubeList *list){
+Cube list_get_current(CubeList *list){
     return list->cube;
 }
 void lookAt(GLfloat px, GLfloat py, GLfloat pz,
@@ -326,13 +472,16 @@ void OnTimer(int value)
     glutTimerFunc(20, &OnTimer, value);
 }
 
+//TODO: fixa ordentlig kamera
 void keyboardMovement()
 {
     if (keyIsDown('w')){
         float tempX = lookAtPosX - cameraPosX;
         float tempY = lookAtPosY - cameraPosY;
         float tempZ = lookAtPosZ - cameraPosZ;
-
+		tempX= 0.05;
+		tempY= 0.05;
+		tempZ= 0.05;
         cameraPosX += tempX;
         cameraPosY += tempY;
         cameraPosZ += tempZ;
@@ -346,6 +495,9 @@ void keyboardMovement()
         float tempX = lookAtPosX - cameraPosX;
         float tempY = lookAtPosY - cameraPosY;
         float tempZ = lookAtPosZ - cameraPosZ;
+		tempX= 0.05;
+		tempY= 0.05;
+		tempZ= 0.05;
 
         cameraPosX -= tempX;
         cameraPosY -= tempY;
@@ -358,14 +510,14 @@ void keyboardMovement()
 
     if (keyIsDown('a')){
 
-        drot += 0.1;
+        drot += 0.05;
         lookAtPosX = cameraPosX + sin(drot);
         lookAtPosZ = cameraPosZ + cos(drot);
 
     }
     else if (keyIsDown('d')){
 
-        drot -= 0.1;
+        drot -= 0.05;
         lookAtPosX = cameraPosX + sin(drot);
         lookAtPosZ = cameraPosZ + cos(drot);
     }
