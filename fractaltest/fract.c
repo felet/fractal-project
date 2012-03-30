@@ -88,13 +88,12 @@ void keyboardMovement();
 CubeList *list_create(Cube data);
 CubeList *list_add(CubeList *node, Cube data);
 int list_remove(CubeList *list, CubeList *node);
-Cube list_get_current(CubeList *list);
+Cube list_get_cube(CubeList *list);
 CubeList *list_get_next(CubeList *list);
-void createCubes(Cube o, CubeList *list);
+void createCube(Cube o, CubeList *list);
 void uploadCube(Cube *c);
 bool *list_not_empty(CubeList *list);
-void drawCubes(const CubeList *l, GLfloat *totalMatrix);
-
+void drawCubes(const CubeList *l, GLfloat* spacing, GLfloat *cm, GLfloat *pm, GLfloat *tm, int offset, int n, GLfloat *color);
 void init(void)
 {
 	dumpInfo();
@@ -144,8 +143,14 @@ void init(void)
     test.vertexBufferObjID = 12;
     test.indexBufferObjID = 15;
     mylist = list_create(test);
-    createCubes(test,mylist);
-
+    createCube(test,mylist);
+    CubeList *tl = mylist;
+    int listlength = 0;
+    while (tl!=NULL){
+        listlength++;
+        tl = tl->next;
+    }
+    printf("\n vi har : %d stycken kuber\n",listlength);
  /*   mylist = list_get_next(mylist);
     Cube test2 = list_get_current(mylist);
     int i,j;
@@ -159,7 +164,8 @@ void display(){
 
     float t = glutGet(GLUT_ELAPSED_TIME)/1000.0f; //Time variable
     int settexture = 0; //Use no texture, settexture = 1 to enable texture
-
+    GLfloat spacing[3] = {0, 0, 0};
+    GLfloat color[3] = {0.2, 0.4, 0.1};
     // clear the screen
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -191,10 +197,10 @@ void display(){
 	// Initialize matrices
     // TODO: Rotera ej ljuskällor
     T(0, 0, 0, trans);
-    Ry(t,rot);
-    Mult(rot, trans, trans);
-    Mult(camera, trans, totalMatrix); 
-    Mult(projectionMatrix, totalMatrix, totalMatrix);
+  //  Ry(t,rot);
+  //  Mult(rot, trans, trans);
+    //Mult(camera, trans, totalMatrix); 
+    //Mult(projectionMatrix, totalMatrix, totalMatrix);
     
 	// Upload matrices
     glUniformMatrix4fv(glGetUniformLocation(program, "totalMatrix"), 1, GL_TRUE, totalMatrix);
@@ -203,12 +209,38 @@ void display(){
     glUniformMatrix4fv(glGetUniformLocation(program, "transformation"), 1, GL_TRUE, trans);
 
     // Cube
-  //  glBindVertexArray(vertexID);			// Select VAO
+    //  glBindVertexArray(vertexID);			// Select VAO
     glUniform3f(glGetUniformLocation(program, "inColor"), 1.0,1.0,0.0);
- //   glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_BYTE, NULL);
+    //   glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_BYTE, NULL);
+    GLfloat length = abs(list_get_cube(mylist).v[7][0] - list_get_cube(mylist).v[6][0])/3.0;
+    int j,k,l,i, cubesize = 7;
+    GLfloat colorstep[3]={0.0,0.0,0.0};
 
-	drawCubes(mylist, totalMatrix);
-	
+    for(i=0;i<3;i++){
+        colorstep[i] = (1.0-color[i])/(GLfloat)cubesize;
+    }
+    int test = 0;
+    GLfloat c = 0.1;
+    for(j=0;j<cubesize;j++){
+        for(k=0;k<cubesize;k++){
+            for(l=0;l<cubesize;l++){
+                test++;
+                printf("\n test: %d",test);
+                T(j*length,k*length,l*length,trans);
+                color[j] += colorstep[j];
+                drawCubes(mylist,spacing,camera,projectionMatrix,trans,1,1,color);
+  /*  spacing[0] = abs(list_get_cube(mylist).v[7][0] - list_get_cube(mylist).v[6][0])/3.0;
+	drawCubes(mylist, spacing, camera, projectionMatrix, trans, 1, 3, color);
+    T(0.0, spacing[0], 0.0, trans);
+    color[0] = 0.2;
+    drawCubes(mylist,spacing,camera,projectionMatrix, trans, 1, 3, color);
+    T(j*spacing[0], 2*spacing[0], 0.0, trans);
+    color[1] = 0.2;
+    drawCubes(mylist,spacing,camera,projectionMatrix, trans, 1, 3, color);
+    */
+            }
+        }
+    }
     printError("display");
     glutSwapBuffers();
 }
@@ -253,26 +285,54 @@ nya <=> gamla
 + + +
 - + +
 */
-void drawCubes(const CubeList *l, GLfloat *totalMatrix){
+void drawCubes(const CubeList *l, GLfloat* spacing, GLfloat *cm, GLfloat *pm, GLfloat* tm, int offset, int n, GLfloat *color){
 	CubeList *tl = l;
 	Cube c;
-	GLfloat trans[16], color = 0, xspace = 0;	
-	while(tl != NULL)
+    int i,j;
+	GLfloat total_m[16], camera_m[16], projection_m[16], translation_m[16], local_trans[16], colorstep[3];
+    memcpy(camera_m, cm, 16*sizeof(GLfloat));
+    memcpy(projection_m, pm, 16*sizeof(GLfloat));
+
+    GLfloat cspacing[] = {0,0,0};
+    for(i=0;i<3;i++){
+        colorstep[i] = (1.0-color[i])/n;
+    }
+
+    //Step to the right offset
+    for (i=0;i<offset;i++)
+    {
+        if(tl != NULL)
+            tl = tl->next;  
+    }
+
+    //Draw n elements
+    for(i=0;i<n;i++)
 	{
-		c = tl->cube;
-		T(xspace,0,0, trans);
-		Mult(trans,totalMatrix, totalMatrix);
-    	glUniformMatrix4fv(glGetUniformLocation(program, "totalMatrix"), 1, GL_TRUE, totalMatrix);
-		glUniform3f(glGetUniformLocation(program, "inColor"), color, color/2.0 ,0.0);
-    	glBindVertexArray(c.vertexArrayObjID);    // Select VAO
-    	glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_BYTE, 0L);
-		tl = tl->next;
-		color = color + 0.1;
-		xspace = xspace + 0.01;
-	}
+        if(tl != NULL){
+            c = list_get_cube(tl);
+            
+            //Transformations
+            memcpy(translation_m, tm, 16*sizeof(GLfloat));
+            T(cspacing[0],cspacing[1],cspacing[2], local_trans);
+            Mult(translation_m,local_trans,translation_m);
+            Mult(camera_m, translation_m, total_m);
+            Mult(projection_m, total_m, total_m);
+
+            //Upload to shader
+            glUniformMatrix4fv(glGetUniformLocation(program, "totalMatrix"), 1, GL_TRUE, total_m);
+            glUniform3f(glGetUniformLocation(program, "inColor"), color[0], color[1] ,color[2]);
+            glBindVertexArray(c.vertexArrayObjID);    // Select VAO
+            glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_BYTE, 0L);
+            
+            for(j=0;j<3;j++){
+                color[j] += colorstep[j];
+                cspacing[j] += spacing[j];
+            }
+        }
+    }
 }
 
-void createCubes(Cube o, CubeList *list){
+void createCube(Cube o, CubeList *list){
 double length = abs(o.v[7][0] - o.v[6][0]);
 double radius = length/6.0;
 
@@ -323,14 +383,7 @@ int i,j;
 uploadCube(&new);
 list_add(list,new);
 
-Cube morecubes[26];
-int i, trans[16];
-for (i=0;i<26;i++)
-{
-	morecubes[i] = new;
-	uploadCube(&morecubes[i]);
-	list_add(list,morecubes[i]);
-}
+
 }
 
 void uploadCube(Cube *c){
@@ -356,7 +409,7 @@ void uploadCube(Cube *c){
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, c->indexBufferObjID);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, 36*sizeof(GLuint), cubeIndices, GL_STATIC_DRAW);
 
-    printf("\n array id: %p \n", c->vertexArrayObjID);
+    //printf("\n array id: %p \n", c->vertexArrayObjID);
 }
 bool *list_not_empty(CubeList *list){
  return (list->next != NULL);
@@ -392,7 +445,7 @@ int list_remove(CubeList *list, CubeList *node)
 		return 0;		
 	} else return -1;
 }
-Cube list_get_current(CubeList *list){
+Cube list_get_cube(CubeList *list){
     return list->cube;
 }
 void lookAt(GLfloat px, GLfloat py, GLfloat pz,
@@ -476,12 +529,10 @@ void OnTimer(int value)
 void keyboardMovement()
 {
     if (keyIsDown('w')){
-        float tempX = lookAtPosX - cameraPosX;
-        float tempY = lookAtPosY - cameraPosY;
-        float tempZ = lookAtPosZ - cameraPosZ;
-		tempX= 0.05;
-		tempY= 0.05;
-		tempZ= 0.05;
+        float tempX = (lookAtPosX - cameraPosX)/4;
+        float tempY = (lookAtPosY - cameraPosY)/4;
+        float tempZ = (lookAtPosZ - cameraPosZ)/4;
+        
         cameraPosX += tempX;
         cameraPosY += tempY;
         cameraPosZ += tempZ;
@@ -492,12 +543,9 @@ void keyboardMovement()
 
     }
     else if (keyIsDown('s')){
-        float tempX = lookAtPosX - cameraPosX;
-        float tempY = lookAtPosY - cameraPosY;
-        float tempZ = lookAtPosZ - cameraPosZ;
-		tempX= 0.05;
-		tempY= 0.05;
-		tempZ= 0.05;
+        float tempX = (lookAtPosX - cameraPosX)/4;
+        float tempY = (lookAtPosY - cameraPosY)/4;
+        float tempZ = (lookAtPosZ - cameraPosZ)/4;
 
         cameraPosX -= tempX;
         cameraPosY -= tempY;
