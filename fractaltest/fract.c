@@ -43,8 +43,9 @@ GLuint program;
 GLuint *tex; //Texture pointer
 
 //TODO : Create cube 
-unsigned int vertexID;
-unsigned int indexID;
+unsigned int vertexArrayID;
+unsigned int vertexBufferID;
+unsigned int indexBufferID;
 unsigned int numIndices = 36;
 unsigned int numVertices = 24;
 GLfloat vertices[8][3] = {
@@ -99,12 +100,12 @@ void init(void)
 	dumpInfo();
 
 	// GL inits
-	glClearColor(0.2,0.2,0.0,0);
-	printError("GL inits");
+	glClearColor(0.0,0.1,0.2,0);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
 	//glFrontFace(GL_CW);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	printError("GL inits");
 
     initKeymapManager();
 
@@ -120,30 +121,32 @@ void init(void)
     //m1 = LoadModelPlus("name.obj", program, "in_Position", "in_Normal", "inTexCoord");
 
 	// Allocate and activate Vertex Array Objects
-	glGenVertexArrays(1, &vertexID);
-	glBindVertexArray(vertexID);
+	glGenVertexArrays(1, &vertexArrayID);
+	glBindVertexArray(vertexArrayID);
 
 	// Allocate Vertex Buffer Objects
-	glGenBuffers(1, &vertexID);
-	glGenBuffers(1, &indexID);
+	glGenBuffers(1, &vertexBufferID);
+	glGenBuffers(1, &indexBufferID);
 
     // VBO for vertex data
-	glBindBuffer(GL_ARRAY_BUFFER, vertexID);
+	glBindBuffer(GL_ARRAY_BUFFER, vertexBufferID);
 	glBufferData(GL_ARRAY_BUFFER, numVertices*sizeof(GLfloat), vertices, GL_STATIC_DRAW);
 	glVertexAttribPointer(glGetAttribLocation(program, "in_Position"), 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(glGetAttribLocation(program, "in_Position"));
 	printError("init vertices");
 
     //VBO for index data
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexID);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBufferID);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, numIndices*sizeof(GLubyte), cubeIndices, GL_STATIC_DRAW);
-    Cube test;
-    memcpy(test.v, vertices, 24*sizeof(GLfloat));
-    test.vertexArrayObjID = vertexID;
-    test.vertexBufferObjID = 12;
-    test.indexBufferObjID = 15;
-    mylist = list_create(test);
-    createCube(test,mylist);
+	
+	//Add a cube to object list
+    Cube obj;
+    memcpy(obj.v, vertices, numVertices*sizeof(GLfloat));
+    obj.vertexArrayObjID = vertexArrayID;
+    obj.vertexBufferObjID = vertexBufferID;
+    obj.indexBufferObjID = indexBufferID;
+    mylist = list_create(obj);
+    createCube(obj,mylist);
     CubeList *tl = mylist;
     int listlength = 0;
     while (tl!=NULL){
@@ -197,8 +200,8 @@ void display(){
 	// Initialize matrices
     // TODO: Rotera ej ljuskällor
     T(0, 0, 0, trans);
-  //  Ry(t,rot);
-  //  Mult(rot, trans, trans);
+	//Ry(t,rot);
+	//Mult(rot, trans, trans);
     //Mult(camera, trans, totalMatrix); 
     //Mult(projectionMatrix, totalMatrix, totalMatrix);
     
@@ -209,26 +212,25 @@ void display(){
     glUniformMatrix4fv(glGetUniformLocation(program, "transformation"), 1, GL_TRUE, trans);
 
     // Cube
-    //  glBindVertexArray(vertexID);			// Select VAO
-    glUniform3f(glGetUniformLocation(program, "inColor"), 1.0,1.0,0.0);
-    //   glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_BYTE, NULL);
+    //glBindVertexArray(vertexArrayID);			// Select VAO
+    glUniform3f(glGetUniformLocation(program, "inColor"), 0.0,0.0,0.0);
+    //glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_BYTE, NULL);
     GLfloat length = abs(list_get_cube(mylist).v[7][0] - list_get_cube(mylist).v[6][0])/3.0;
-    int j,k,l,i, cubesize = 7;
+    int j,k,l,i, cubesize = 5;
     GLfloat colorstep[3]={0.0,0.0,0.0};
 
     for(i=0;i<3;i++){
         colorstep[i] = (1.0-color[i])/(GLfloat)cubesize;
     }
-    int test = 0;
-    GLfloat c = 0.1;
+	drawCubes(mylist,spacing,camera,projectionMatrix,trans,0,1,color);
+		/*:
     for(j=0;j<cubesize;j++){
         for(k=0;k<cubesize;k++){
             for(l=0;l<cubesize;l++){
-                test++;
-                printf("\n test: %d",test);
                 T(j*length,k*length,l*length,trans);
                 color[j] += colorstep[j];
                 drawCubes(mylist,spacing,camera,projectionMatrix,trans,1,1,color);
+		*/
   /*  spacing[0] = abs(list_get_cube(mylist).v[7][0] - list_get_cube(mylist).v[6][0])/3.0;
 	drawCubes(mylist, spacing, camera, projectionMatrix, trans, 1, 3, color);
     T(0.0, spacing[0], 0.0, trans);
@@ -238,9 +240,7 @@ void display(){
     color[1] = 0.2;
     drawCubes(mylist,spacing,camera,projectionMatrix, trans, 1, 3, color);
     */
-            }
-        }
-    }
+           // }
     printError("display");
     glutSwapBuffers();
 }
@@ -382,8 +382,6 @@ int i,j;
  */
 uploadCube(&new);
 list_add(list,new);
-
-
 }
 
 void uploadCube(Cube *c){
