@@ -1,28 +1,50 @@
-#include <time.h>
-#include <unistd.h>
-
+#include "GL_utilities.h"
 #include "AudioPlayer.hpp"
+#include "Cube.hpp"
 
-int main()
+// Reference to shader program
+GLuint program;
+
+Cube firstCube;
+
+void init(void)
 {
+    dumpInfo();
 
-    AudioPlayer music(20);
-    music.loadWave("sound.wav");
-    music.printHeader();
-    music.play();
+    // GL inits
+    glClearColor(0.2, 0.2, 0.5, 0);
+    glEnable(GL_DEPTH_TEST);
+    printError("GL inits");
 
-    while (music.isPlaying())
-    {
-        // Sleep ca 1 frame
-        usleep(20000);
+    // Load and compile shader
+    program = loadShaders("vertex", "fragment");
+    printError("init shader");
 
-        music.printElapsedSec();
-
-        music.doFFT();
-        music.getFrequencyBandBetween(0, music.getNumberFrequencies());
-    }
-
-    music.freeWave();
-    return 0;
+    // Load Cube
+    firstCube.init(program);
+    printError("init cube");
 }
 
+
+void display(void)
+{
+    printError("pre display");
+
+    // clear the screen
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    firstCube.draw();
+
+    printError("display");
+
+    glFlush();
+}
+
+int main(int argc, char *argv[])
+{
+    glutInit(&argc, argv);
+    glutCreateWindow ("");
+    glutDisplayFunc(display);
+    init();
+    glutMainLoop();
+}
