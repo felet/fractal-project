@@ -11,7 +11,7 @@ float lookAtPosZ = 0;
 
 float cameraPosX = 0;
 float cameraPosY = 0.5;
-float cameraPosZ = -2;
+float cameraPosZ = -10;
 float drot = 0;
 
 #define near 1.0
@@ -94,7 +94,7 @@ CubeList *list_get_next(CubeList *list);
 void createCube(Cube o, CubeList *list);
 void uploadCube(Cube *c);
 bool *list_not_empty(CubeList *list);
-void drawCubes(const CubeList *l, GLfloat* spacing, GLfloat *cm, GLfloat *pm, GLfloat *tm, int offset, int n, GLfloat *color);
+void drawObject(const CubeList *l, GLfloat *cm, GLfloat *pm, GLfloat *tm, int offset, GLfloat *color);
 void init(void)
 {
 	dumpInfo();
@@ -216,16 +216,9 @@ void display(){
     glUniform3f(glGetUniformLocation(program, "inColor"), 0.0,0.0,0.0);
     //glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_BYTE, NULL);
     GLfloat length = abs(list_get_cube(mylist).v[7][0] - list_get_cube(mylist).v[6][0]);
-    int m,j,k,l,i, cubesize = 3;
+    int m,j,k,l,i;
     int spongelvl = 2;
     int dim = pow(3,spongelvl);
-    int position[dim][dim][dim];
-    for(j=0;j<dim;j++)
-        for(k=0;k<dim;k++)
-            for(l=0;l<dim;l++){
-                position[j][k][l]=j+k+l;
-                //printf("position: %d, %d, %d ger displacement: %d\n",j,k,l,position[j][k][l]);
-            }
 
     for (j=0;j<3;j++)
         for(k=0;k<3;k++)
@@ -234,14 +227,9 @@ void display(){
                      color[i][l][j][k] = 0.05*(j+k+l+i);
 
     GLfloat colorstep[3]={0.0,0.0,0.0};
-    /*for(i=0;i<3;i++){
-        colorstep[i] = (1.0-color[i])/(GLfloat)cubesize;
-        printf("color[%d]:%f\n", i, colorstep[i]);
-    
-    }*/
+
     colorstep[0] =  0.05;
   //  length = length/pow(3,spongelvl);
-//for(m=0;m<spongelvl*pow(cubesize,3);m++){
     for(j=0;j<dim;j++){
         for(k=0;k<dim;k++){
             for(l=0;l<dim;l++){
@@ -249,12 +237,11 @@ void display(){
                          || j==1 && l==1
                          || k==1 && j==1)){
                     T(length*j,length*k,length*l,trans);
-                    drawCubes(mylist,spacing,camera,projectionMatrix,trans,0,1,color[j][k][l]);
+                    drawObject(mylist,camera,projectionMatrix,trans,0,color[j][k][l]);
                 }
             }
         }
     }
-//}
 
   /*  spacing[0] = abs(list_get_cube(mylist).v[7][0] - list_get_cube(mylist).v[6][0])/3.0;
 	drawCubes(mylist, spacing, camera, projectionMatrix, trans, 1, 3, color);
@@ -265,8 +252,6 @@ void display(){
     color[1] = 0.2;
     drawCubes(mylist,spacing,camera,projectionMatrix, trans, 1, 3, color);
     */
-    if(GL_NO_ERROR==glGetError())
-    printf("Inga fel!\n");
     printError("display");
     glutSwapBuffers();
 
@@ -279,7 +264,7 @@ int main(int argc, char *argv[])
 	glutCreateWindow("Fractal test");
 	glutDisplayFunc(display); 
 	init();
-	glutTimerFunc(10000, &OnTimer, 0);
+	glutTimerFunc(50, &OnTimer, 0);
 	glutMainLoop();
 	return 0;
 }
@@ -312,18 +297,14 @@ nya <=> gamla
 + + +
 - + +
 */
-void drawCubes(const CubeList *l, GLfloat* spacing, GLfloat *cm, GLfloat *pm, GLfloat* tm, int offset, int n, GLfloat *color){
+void drawObject(const CubeList *l, GLfloat *cm, GLfloat *pm, GLfloat* tm, int offset, GLfloat *color){
 	CubeList *tl = l;
 	Cube c;
     int i,j;
-	GLfloat total_m[16], camera_m[16], projection_m[16], translation_m[16], local_trans[16], colorstep[3];
+	GLfloat total_m[16], camera_m[16], projection_m[16], translation_m[16], local_trans[16];
     memcpy(camera_m, cm, 16*sizeof(GLfloat));
     memcpy(projection_m, pm, 16*sizeof(GLfloat));
 
-    GLfloat cspacing[] = {0,0,0};
-    for(i=0;i<3;i++){
-        colorstep[i] = (1.0-color[i])/n;
-    }
 
     //Step to the right offset
     for (i=0;i<offset;i++)
@@ -332,31 +313,19 @@ void drawCubes(const CubeList *l, GLfloat* spacing, GLfloat *cm, GLfloat *pm, GL
             tl = tl->next;  
     }
 
-    //Draw n elements
-    for(i=0;i<n;i++)
-	{
-        if(tl != NULL){
-            c = list_get_cube(tl);
+    //Draw object
+	c = list_get_cube(tl);
             
-            //Transformations
-            memcpy(translation_m, tm, 16*sizeof(GLfloat));
-            T(cspacing[0],cspacing[1],cspacing[2], local_trans);
-            Mult(translation_m,local_trans,translation_m);
-            Mult(camera_m, translation_m, total_m);
-            Mult(projection_m, total_m, total_m);
+    //Transformations
+    memcpy(translation_m, tm, 16*sizeof(GLfloat));
+    Mult(camera_m, translation_m, total_m);
+    Mult(projection_m, total_m, total_m);
 
             //Upload to shader
-            glUniformMatrix4fv(glGetUniformLocation(program, "totalMatrix"), 1, GL_TRUE, total_m);
-            glUniform3f(glGetUniformLocation(program, "inColor"), color[0], color[1] ,color[2]);
-            glBindVertexArray(c.vertexArrayObjID);    // Select VAO
-            glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_BYTE, 0L);
-            
-            for(j=0;j<3;j++){
-                color[j] += colorstep[j];
-                cspacing[j] += spacing[j];
-            }
-        }
-    }
+    glUniformMatrix4fv(glGetUniformLocation(program, "totalMatrix"), 1, GL_TRUE, total_m);
+    glUniform3f(glGetUniformLocation(program, "inColor"), color[0], color[1] ,color[2]);
+    glBindVertexArray(c.vertexArrayObjID);    // Select VAO
+    glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_BYTE, 0L);
 }
 
 void createCube(Cube o, CubeList *list){
@@ -547,7 +516,7 @@ void lookAt(GLfloat px, GLfloat py, GLfloat pz,
 void OnTimer(int value)
 {
     glutPostRedisplay();
-    glutTimerFunc(10000, &OnTimer, value);
+    glutTimerFunc(50, &OnTimer, value);
 }
 
 //TODO: fixa ordentlig kamera
@@ -661,10 +630,10 @@ void keyboardMovement()
     }
     if (keyIsDown('p')){
 
-        lookAtPosY += 0.05;
+        lookAtPosY += 0.1;
     }
     else if (keyIsDown('l')){
-        lookAtPosY -= 0.05;
+        lookAtPosY -= 0.1;
     }
 
 }
