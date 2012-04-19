@@ -9,9 +9,9 @@ float lookAtPosX = 0;
 float lookAtPosY = 0;
 float lookAtPosZ = 0;
 
-float cameraPosX = 0;
-float cameraPosY = 0.5;
-float cameraPosZ = -10;
+float cameraPosX = -15;
+float cameraPosY = 5;
+float cameraPosZ = -30;
 float drot = 0;
 
 #define near 1.0
@@ -168,7 +168,6 @@ void display(){
     float t = glutGet(GLUT_ELAPSED_TIME)/1000.0f; //Time variable
     int settexture = 0; //Use no texture, settexture = 1 to enable texture
     GLfloat spacing[3] = {0, 0, 0};
-    GLfloat color[3][3][3][3];
     // clear the screen
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -217,28 +216,42 @@ void display(){
     //glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_BYTE, NULL);
     GLfloat length = abs(list_get_cube(mylist).v[7][0] - list_get_cube(mylist).v[6][0]);
     int m,j,k,l,i;
-    int spongelvl = 2;
+    int spongelvl = 3;
     int dim = pow(3,spongelvl);
-
-    for (j=0;j<3;j++)
-        for(k=0;k<3;k++)
-            for(l=0;l<3;l++)
-                for(i=0;i<3;i++)
-                     color[i][l][j][k] = 0.05*(j+k+l+i);
+	GLfloat color[dim][dim][dim][3];
+	
+	for(k=0;k<3;k++)
+    	for (j=0;j<dim;j++)
+        	for(l=0;l<dim;l++)
+                for(i=0;i<dim;i++)
+                     color[i][l][j][k] = 0.01*(j+k+l+i);
 
     GLfloat colorstep[3]={0.0,0.0,0.0};
 
     colorstep[0] =  0.05;
-  //  length = length/pow(3,spongelvl);
-    for(j=0;j<dim;j++){
-        for(k=0;k<dim;k++){
-            for(l=0;l<dim;l++){
-                if (!(k==1 && l==1
-                         || j==1 && l==1
-                         || k==1 && j==1)){
+   // length = length/pow(3,spongelvl);
+    for(j=0;j<dim;j++)
+	{
+        for(k=0;k<dim;k++)
+		{
+            for(l=0;l<dim;l++)
+			{
+				for (int m=0;m<(spongelvl-1);m++)
+					{
+						if (!(
+						((j/(int)pow(3,m))%3==1 && (k/(int)pow(3,m))%3==1)
+                         || ((l/(int)pow(3,m))%3==1 && (k/(int)pow(3,m))%3==1)
+                         || ((l/(int)pow(3,m))%3==1 && (j/(int)pow(3,m))%3==1)
+						))
+					T(length*j,length*k,length*l,trans);
+                    drawObject(mylist,camera,projectionMatrix,trans,0,color[j][k][l]);
+					}
+             /*   if (!((3*k/dim)%3==1 && (3*l/dim)%3==1
+                         || (3*j/dim)%3==1 && (3*l/dim)%3==1
+                         || (3*k/dim)%3==1 && (3*j/dim)%3==1)){
                     T(length*j,length*k,length*l,trans);
                     drawObject(mylist,camera,projectionMatrix,trans,0,color[j][k][l]);
-                }
+                }*/
             }
         }
     }
@@ -261,6 +274,7 @@ int main(int argc, char *argv[])
 {
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
+	glutInitWindowSize(800,800);
 	glutCreateWindow("Fractal test");
 	glutDisplayFunc(display); 
 	init();
@@ -321,7 +335,7 @@ void drawObject(const CubeList *l, GLfloat *cm, GLfloat *pm, GLfloat* tm, int of
     Mult(camera_m, translation_m, total_m);
     Mult(projection_m, total_m, total_m);
 
-            //Upload to shader
+    //Upload to shader
     glUniformMatrix4fv(glGetUniformLocation(program, "totalMatrix"), 1, GL_TRUE, total_m);
     glUniform3f(glGetUniformLocation(program, "inColor"), color[0], color[1] ,color[2]);
     glBindVertexArray(c.vertexArrayObjID);    // Select VAO
