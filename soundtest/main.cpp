@@ -1,11 +1,14 @@
 #include "GL_utilities.h"
-#include "AudioPlayer.hpp"
 #include "Cube.hpp"
+
+#include "AudioPlayer.hpp"
 
 // Reference to shader program
 GLuint program;
 
 Cube firstCube;
+
+AudioPlayer music(20);
 
 void init(void)
 {
@@ -23,6 +26,9 @@ void init(void)
     // Load Cube
     firstCube.init(program);
     printError("init cube");
+
+    music.loadWave("sound.wav");
+    music.play();
 }
 
 
