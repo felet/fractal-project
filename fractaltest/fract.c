@@ -5,17 +5,17 @@
 #include "assert.h"
 //#include <list>
 
-float lookAtPosX = 0;
-float lookAtPosY = 0;
-float lookAtPosZ = 0;
+float lookAtPosX = 50;
+float lookAtPosY = 50;
+float lookAtPosZ = 50;
 
-float cameraPosX = -15;
-float cameraPosY = 5;
-float cameraPosZ = -30;
+float cameraPosX = -35;
+float cameraPosY = 50;
+float cameraPosZ = -100;
 float drot = 0;
 
 #define near 1.0
-#define far 90.0
+#define far 500.0
 #define right 0.5
 #define left -0.5
 #define top 0.5
@@ -163,6 +163,7 @@ void init(void)
 }
 
 void display(){
+	printf("display\n");
 	keyboardMovement();
 
     float t = glutGet(GLUT_ELAPSED_TIME)/1000.0f; //Time variable
@@ -201,9 +202,10 @@ void display(){
     T(0, 0, 0, trans);
 	//Ry(t,rot);
 	//Mult(rot, trans, trans);
-    //Mult(camera, trans, totalMatrix); 
-    //Mult(projectionMatrix, totalMatrix, totalMatrix);
-    
+    Mult(camera, trans, totalMatrix); 
+    Mult(projectionMatrix, totalMatrix, totalMatrix);
+    glUniform1i(glGetUniformLocation(program, "settexture"), settexture);
+
 	// Upload matrices
     glUniformMatrix4fv(glGetUniformLocation(program, "totalMatrix"), 1, GL_TRUE, totalMatrix);
     glUniformMatrix4fv(glGetUniformLocation(program, "rotation"), 1, GL_TRUE, rot);
@@ -216,7 +218,7 @@ void display(){
     //glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_BYTE, NULL);
     GLfloat length = abs(list_get_cube(mylist).v[7][0] - list_get_cube(mylist).v[6][0]);
     int m,j,k,l,i;
-    int spongelvl = 3;
+    int spongelvl = 4;
     int dim = pow(3,spongelvl);
 	GLfloat color[dim][dim][dim][3];
 	
@@ -224,9 +226,10 @@ void display(){
     	for (j=0;j<dim;j++)
         	for(l=0;l<dim;l++)
                 for(i=0;i<dim;i++)
-                     color[i][l][j][k] = 0.01*(j+k+l+i);
+                     color[i][l][j][k] = 0.005*(j+k+l+i);
 
     GLfloat colorstep[3]={0.0,0.0,0.0};
+	bool draw;
 
     colorstep[0] =  0.05;
    // length = length/pow(3,spongelvl);
@@ -236,22 +239,21 @@ void display(){
 		{
             for(l=0;l<dim;l++)
 			{
-				for (int m=0;m<(spongelvl-1);m++)
+				draw = true;
+				for (int m=0;m<spongelvl;m++)
 					{
-						if (!(
-						((j/(int)pow(3,m))%3==1 && (k/(int)pow(3,m))%3==1)
+						if (((j/(int)pow(3,m))%3==1 && (k/(int)pow(3,m))%3==1)
                          || ((l/(int)pow(3,m))%3==1 && (k/(int)pow(3,m))%3==1)
-                         || ((l/(int)pow(3,m))%3==1 && (j/(int)pow(3,m))%3==1)
-						))
-					T(length*j,length*k,length*l,trans);
-                    drawObject(mylist,camera,projectionMatrix,trans,0,color[j][k][l]);
+                         || ((l/(int)pow(3,m))%3==1 && (j/(int)pow(3,m))%3==1))
+						{
+							draw = false;
+						}
 					}
-             /*   if (!((3*k/dim)%3==1 && (3*l/dim)%3==1
-                         || (3*j/dim)%3==1 && (3*l/dim)%3==1
-                         || (3*k/dim)%3==1 && (3*j/dim)%3==1)){
-                    T(length*j,length*k,length*l,trans);
-                    drawObject(mylist,camera,projectionMatrix,trans,0,color[j][k][l]);
-                }*/
+				if (draw) 
+					{
+						T(length*j,length*k,length*l,trans);
+                    	drawObject(mylist,camera,projectionMatrix,trans,0,color[j][k][l]);
+					}
             }
         }
     }
@@ -278,7 +280,7 @@ int main(int argc, char *argv[])
 	glutCreateWindow("Fractal test");
 	glutDisplayFunc(display); 
 	init();
-	glutTimerFunc(50, &OnTimer, 0);
+	glutTimerFunc(20, &OnTimer, 0);
 	glutMainLoop();
 	return 0;
 }
@@ -530,7 +532,7 @@ void lookAt(GLfloat px, GLfloat py, GLfloat pz,
 void OnTimer(int value)
 {
     glutPostRedisplay();
-    glutTimerFunc(50, &OnTimer, value);
+    glutTimerFunc(20, &OnTimer, value);
 }
 
 //TODO: fixa ordentlig kamera
