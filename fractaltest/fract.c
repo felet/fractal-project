@@ -60,11 +60,23 @@ GLfloat vertices[8][3] = {
     {0.5,0.5,0.5}, 
 {-0.5,0.5,0.5}};
 
+GLfloat normals[8][3] = {
+    {-0.58,-0.58,-0.58}, 
+    {0.58,-0.58,-0.58}, 
+    {0.58,0.58,-0.58}, 
+    {-0.58,0.58,-0.58}, 
+    {-0.58,-0.58,0.58}, 
+    {0.58,-0.58,0.58}, 
+    {0.58,0.58,0.58}, 
+{-0.58,0.58,0.58}};
+
 typedef struct _Cube{
 unsigned int vertexArrayObjID;
 unsigned int vertexBufferObjID;
 unsigned int indexBufferObjID;
+unsigned int normalBufferObjID;
     GLfloat v[8][3];
+	GLfloat n[8][3];
 } Cube;
 
 typedef struct _CubeList{
@@ -153,11 +165,12 @@ void init(void)
 	//Add a cube to object list
     Cube obj;
     memcpy(obj.v, vertices, numVertices*sizeof(GLfloat));
+	memcpy(obj.n, normals, numVertices*sizeof(GLfloat));
     obj.vertexArrayObjID = vertexArrayID;
     obj.vertexBufferObjID = vertexBufferID;
     obj.indexBufferObjID = indexBufferID;
     mylist = list_create(obj);
-    createCube(obj,mylist);
+    //createCube(obj,mylist);
     CubeList *tl = mylist;
     int listlength = 0;
     while (tl!=NULL){
@@ -167,12 +180,13 @@ void init(void)
     printf("\n vi har : %d stycken kuber\n",listlength);
 	GLfloat length = abs(list_get_cube(mylist).v[7][0] - list_get_cube(mylist).v[6][0]);
 	int m,j,k,l;
-
+	
 	for(k=0;k<3;k++)
     	for (j=0;j<dim;j++)
         	for(l=0;l<dim;l++)
                 for(m=0;m<dim;m++)
-                     color[m][l][j][k] = 0.005*(j+k+l+m);
+                    // color[m][l][j][k] = 0.005*(j+k+l+m);
+						color[m][l][j][k] = 1.0;
 	for(j=0;j<dim;j++)
 	{
         for(k=0;k<dim;k++)
@@ -199,7 +213,7 @@ void init(void)
 }
 
 void display(){
-	printf("display\n");
+	//printf("display\n");
 	keyboardMovement();
 
    // float t = glutGet(GLUT_ELAPSED_TIME)/1000.0f; //Time variable
@@ -223,14 +237,14 @@ void display(){
     glUniform1i(glGetUniformLocation(program, "settexture"), settexture);*/
     
 	// Upload lightsources
-   /* glUniform3fv(glGetUniformLocation(program, "lightSourcesDirPosArr"), 4, &lightSourcesDirectionsPositions[0].x);
+    glUniform3fv(glGetUniformLocation(program, "lightSourcesDirPosArr"), 4, &lightSourcesDirectionsPositions[0].x);
     glUniform3fv(glGetUniformLocation(program, "lightSourcesColorArr"), 4, &lightSourcesColorsArr[0].x);
     glUniform1fv(glGetUniformLocation(program, "specularExponent"), 4, specularExponent);
-*/
+
 	// Upload camera position (used in specular shading)
-  //  GLfloat camera_position[] = {(GLfloat)cameraPosX, (GLfloat)cameraPosY, (GLfloat)cameraPosZ};
-//    glUniform3fv(glGetUniformLocation(program, "camera_position"), 1, camera_position);
-//    glUniform1iv(glGetUniformLocation(program, "isDirectional"), 4, isDirectional);
+    GLfloat camera_position[] = {(GLfloat)cameraPosX, (GLfloat)cameraPosY, (GLfloat)cameraPosZ};
+    glUniform3fv(glGetUniformLocation(program, "camera_position"), 1, camera_position);
+    glUniform1iv(glGetUniformLocation(program, "isDirectional"), 4, isDirectional);
 
 	// Initialize matrices
     // TODO: Rotera ej ljuskällor
@@ -242,7 +256,7 @@ void display(){
     //glUniform1i(glGetUniformLocation(program, "settexture"), settexture);
 
 	// Upload matrices
-   /* glUniformMatrix4fv(glGetUniformLocation(program, "totalMatrix"), 1, GL_TRUE, totalMatrix);
+  /* glUniformMatrix4fv(glGetUniformLocation(program, "totalMatrix"), 1, GL_TRUE, totalMatrix);
     glUniformMatrix4fv(glGetUniformLocation(program, "rotation"), 1, GL_TRUE, rot);
     glUniform1i(glGetUniformLocation(program, "settexture"), settexture);
     glUniformMatrix4fv(glGetUniformLocation(program, "transformation"), 1, GL_TRUE, trans);
@@ -252,9 +266,7 @@ void display(){
     glUniform3f(glGetUniformLocation(program, "inColor"), 0.0,0.0,0.0);
     //glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_BYTE, NULL);
 
-
     int j,k,l;
-
     for(j=0;j<dim;j++)
 	{
         for(k=0;k<dim;k++)
@@ -263,6 +275,8 @@ void display(){
 			{
 				if (draw[j][k][l])
 				{
+					Mult(projectionMatrix, mengerTA[j][k][l], trans);
+    				glUniformMatrix4fv(glGetUniformLocation(program, "transformation"), 1, GL_TRUE, trans);
 					Mult(camera, mengerTA[j][k][l],totalMatrix);
 					Mult(projectionMatrix, totalMatrix, totalMatrix);
 					drawObject(mylist,totalMatrix,0,color[j][k][l]);
@@ -394,33 +408,34 @@ void uploadCube(Cube *c){
     glGenVertexArrays(1, &c->vertexArrayObjID);
     glGenBuffers(1, &c->vertexBufferObjID);
     glGenBuffers(1, &c->indexBufferObjID);
-  //  glGenBuffers(1, &c.normalBufferObjID);
+    glGenBuffers(1, &c->normalBufferObjID);
     
     glBindVertexArray(c->vertexArrayObjID);
 
     // VBO for vertex data
     glBindBuffer(GL_ARRAY_BUFFER, c->vertexBufferObjID);
-    glBufferData(GL_ARRAY_BUFFER, 24*3*sizeof(GLfloat), c->v, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, 8*3*sizeof(GLfloat), c->v, GL_STATIC_DRAW);
     glVertexAttribPointer(glGetAttribLocation(program, "in_Position"), 3, GL_FLOAT, GL_FALSE, 0, 0); 
     glEnableVertexAttribArray(glGetAttribLocation(program, "in_Position"));
 
-    // VBO for normal data
-  /*  glBindBuffer(GL_ARRAY_BUFFER, bunnyNormalBufferObjID);
-    glBufferData(GL_ARRAY_BUFFER, m->numVertices*3*sizeof(GLfloat), m->normalArray, GL_STATIC_DRAW);
-    glVertexAttribPointer(glGetAttribLocation(program, "inNormal"), 3, GL_FLOAT, GL_FALSE, 0, 0);
-    glEnableVertexAttribArray(glGetAttribLocation(program, "inNormal"));
-   */ 
+    // VBO for normal data TODO FIXA
+    glBindBuffer(GL_ARRAY_BUFFER, c->normalBufferObjID);
+    glBufferData(GL_ARRAY_BUFFER, 8*3*sizeof(GLfloat), c->n, GL_STATIC_DRAW);
+    glVertexAttribPointer(glGetAttribLocation(program, "in_Normal"), 3, GL_FLOAT, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(glGetAttribLocation(program, "in_Normal"));
+   
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, c->indexBufferObjID);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, 36*sizeof(GLuint), cubeIndices, GL_STATIC_DRAW);
-
-    //printf("\n array id: %p \n", c->vertexArrayObjID);
 }
+
 bool list_not_empty(CubeList *list){
  return (list->next != NULL);
 }
+
 CubeList *list_get_next(CubeList *list){
 	return (CubeList *) list->next;
 }
+
 CubeList *list_create(Cube data)
 {
 	CubeList *node;
@@ -449,9 +464,11 @@ int list_remove(CubeList *list, CubeList *node)
 		return 0;		
 	} else return -1;
 }
+
 Cube list_get_cube(CubeList *list){
     return list->cube;
 }
+
 void lookAt(GLfloat px, GLfloat py, GLfloat pz,
                     GLfloat lx, GLfloat ly, GLfloat lz,
                     GLfloat vx, GLfloat vy, GLfloat vz,

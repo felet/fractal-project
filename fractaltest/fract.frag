@@ -1,9 +1,9 @@
 #version 150
 
 uniform vec3 color;
+uniform vec3 inColor;
 
 out vec4 out_Color;
-
 in vec3 normal;
 in vec3 position_to_frag;
 in vec2 TexCoord;
