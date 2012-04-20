@@ -292,7 +292,10 @@ void display(){
         }
     }
 
+
 	GLfloat AM[16];
+	
+	
 for(i=0;i<12;i++)
 	for(j=0;j<dim;j++)
 	{
@@ -301,9 +304,9 @@ for(i=0;i<12;i++)
             for(l=0;l<dim;l++)
 			{
 				if (draw[j][k][l])
-				{			
-					memcpy(AM, mengerTA[j][k][l], 16*sizeof(GLfloat));
-					AM[3] += i*100.0;
+				{	
+					T(100*i,0,0,AM);		
+					Mult(AM,mengerTA[j][k][l],AM);
 					Mult(projectionMatrix, AM, trans);
     				glUniformMatrix4fv(glGetUniformLocation(program, "transformation"), 1, GL_TRUE, trans);
 					Mult(camera, AM,totalMatrix);
