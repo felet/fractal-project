@@ -6,7 +6,7 @@
 
 // Extended version with LoadModelPlus
 
-extern "C"{
+#include "GL_utilities.h" // Use
 
 #include "loadobj.h"
 #include <stdio.h>
@@ -429,7 +429,7 @@ static struct Mesh * LoadOBJ(const char *filename)
 {
   Mesh *theMesh;
 	
-  theMesh = (Mesh*) malloc(sizeof(Mesh));
+  theMesh = (Mesh*)malloc(sizeof(Mesh));
   theMesh->coordIndex = NULL;
   theMesh->vertices = NULL;
   // ProcessMesh may deal with these
@@ -461,17 +461,17 @@ static struct Mesh * LoadOBJ(const char *filename)
 
   // Allocate arrays!
   if (vertCount > 0)
-    theMesh->vertices = (GLfloat*) malloc(sizeof(GLfloat) * vertCount);
+    theMesh->vertices = (GLfloat*)malloc(sizeof(GLfloat) * vertCount);
   if (texCount > 0)
-    theMesh->textureCoords = (GLfloat*) malloc(sizeof(GLfloat) * texCount);
+    theMesh->textureCoords = (GLfloat*)malloc(sizeof(GLfloat) * texCount);
   if (normalsCount > 0)
-    theMesh->vertexNormals = (GLfloat*) malloc(sizeof(GLfloat) * normalsCount);
+    theMesh->vertexNormals = (GLfloat*)malloc(sizeof(GLfloat) * normalsCount);
   if (hasPositionIndices)
-    theMesh->coordIndex = (int*) malloc(sizeof(int) * coordCount);
+    theMesh->coordIndex = (int*)malloc(sizeof(int) * coordCount);
   if (hasNormalIndices)
-    theMesh->normalsIndex = (int*) malloc(sizeof(int) * coordCount);
+    theMesh->normalsIndex = (int*)malloc(sizeof(int) * coordCount);
   if (hasTexCoordIndices)
-    theMesh->textureIndex = (int*) malloc(sizeof(int) * coordCount);
+    theMesh->textureIndex = (int*)malloc(sizeof(int) * coordCount);
 	
   // Zero again
   vertCount=0;
@@ -520,11 +520,11 @@ void DecomposeToTriangles(struct Mesh *theMesh)
 	
   printf("Found %d triangles\n", triangleCount);
 	
-  newCoords = (int*) malloc(sizeof(int) * triangleCount * 3);
+  newCoords = (int*)malloc(sizeof(int) * triangleCount * 3);
   if (theMesh->normalsIndex != NULL)
-    newNormalsIndex = (int*) malloc(sizeof(int) * triangleCount * 3);
+    newNormalsIndex = (int*)malloc(sizeof(int) * triangleCount * 3);
   if (theMesh->textureIndex != NULL)
-    newTextureIndex = (int*) malloc(sizeof(int) * triangleCount * 3);
+    newTextureIndex = (int*)malloc(sizeof(int) * triangleCount * 3);
 	
   // 1.2 Loop through old list and write the new one
   // Almost same loop but now it has space to write the result
@@ -593,12 +593,12 @@ static void generateNormals(Mesh* mesh)
       int face;
       int normalIndex;
 
-      mesh->vertexNormals = (GLfloat*) malloc(3 * sizeof(GLfloat) * mesh->vertexCount);
+      mesh->vertexNormals = (GLfloat*)malloc(3 * sizeof(GLfloat) * mesh->vertexCount);
       memset(mesh->vertexNormals, 0, 3 * sizeof(GLfloat) * mesh->vertexCount);
 
       mesh->normalsCount = mesh->vertexCount;
 
-      mesh->normalsIndex = (int*) malloc(sizeof(GLuint) * mesh->coordCount);
+      mesh->normalsIndex = (int*)malloc(sizeof(GLuint) * mesh->coordCount);
       memcpy(mesh->normalsIndex, mesh->coordIndex,
 	     sizeof(GLuint) * mesh->coordCount);
 
@@ -701,7 +701,7 @@ static Model* generateModel(Mesh* mesh)
 
   int indexHashMapSize = (mesh->vertexCount * hashGap + mesh->coordCount);
 
-  IndexTriplet* indexHashMap = (IndexTriplet*) malloc(sizeof(IndexTriplet)
+  IndexTriplet* indexHashMap = (IndexTriplet*)malloc(sizeof(IndexTriplet)
 				      * indexHashMapSize);
 
   int numNewVertices = 0;
@@ -709,10 +709,10 @@ static Model* generateModel(Mesh* mesh)
 
   int maxValue = 0;
     
-  Model* model = (Model*) malloc(sizeof(Model));
+  Model* model = (Model*)malloc(sizeof(Model));
   memset(model, 0, sizeof(Model));
 
-  model->indexArray = (GLuint*) malloc(sizeof(GLuint) * mesh->coordCount);
+  model->indexArray = (GLuint*)malloc(sizeof(GLuint) * mesh->coordCount);
   model->numIndices = mesh->coordCount;
 
   memset(indexHashMap, 0xff, sizeof(IndexTriplet) * indexHashMapSize);
@@ -761,11 +761,11 @@ static Model* generateModel(Mesh* mesh)
     }
 
   if (mesh->vertices)
-    model->vertexArray = (GLfloat*) malloc(sizeof(GLfloat) * 3 * numNewVertices);
+    model->vertexArray = (GLfloat*)malloc(sizeof(GLfloat) * 3 * numNewVertices);
   if (mesh->vertexNormals)
-    model->normalArray = (GLfloat*) malloc(sizeof(GLfloat) * 3 * numNewVertices);
+    model->normalArray = (GLfloat*)malloc(sizeof(GLfloat) * 3 * numNewVertices);
   if (mesh->textureCoords)
-    model->texCoordArray = (GLfloat*) malloc(sizeof(GLfloat) * 2 * numNewVertices);
+    model->texCoordArray = (GLfloat*)malloc(sizeof(GLfloat) * 2 * numNewVertices);
   
   model->numVertices = numNewVertices;
 
@@ -835,7 +835,9 @@ Model* LoadModelPlus(char* name,
 	
 	m = LoadModel(name);
 
-	glGenVertexArrays(1, &m->vao);
+    printError("LoadModelPlus 1");
+
+    glGenVertexArrays(1, &m->vao);
 	glGenBuffers(1, &m->vb);
 	glGenBuffers(1, &m->ib);
 	glGenBuffers(1, &m->nb);
@@ -844,17 +846,23 @@ Model* LoadModelPlus(char* name,
 	
 	glBindVertexArray(m->vao);
 
+    printError("LoadModelPlus 2");
+
 	// VBO for vertex data
 	glBindBuffer(GL_ARRAY_BUFFER, m->vb);
 	glBufferData(GL_ARRAY_BUFFER, m->numVertices*3*sizeof(GLfloat), m->vertexArray, GL_STATIC_DRAW);
 	glVertexAttribPointer(glGetAttribLocation(program, vertexVariableName), 3, GL_FLOAT, GL_FALSE, 0, 0); 
 	glEnableVertexAttribArray(glGetAttribLocation(program, vertexVariableName));
 
+    printError("LoadModelPlus 3");
+
 	// VBO for normal data
 	glBindBuffer(GL_ARRAY_BUFFER, m->nb);
 	glBufferData(GL_ARRAY_BUFFER, m->numVertices*3*sizeof(GLfloat), m->normalArray, GL_STATIC_DRAW);
 	glVertexAttribPointer(glGetAttribLocation(program, normalVariableName), 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(glGetAttribLocation(program, normalVariableName));
+
+    printError("LoadModelPlus 4");
 	
 	// VBO for texture coordinate data NEW for 5b
 	if (m->texCoordArray != NULL)
@@ -864,10 +872,13 @@ Model* LoadModelPlus(char* name,
 		glVertexAttribPointer(glGetAttribLocation(program, texCoordVariableName), 2, GL_FLOAT, GL_FALSE, 0, 0);
 		glEnableVertexAttribArray(glGetAttribLocation(program, texCoordVariableName));
 	}
+
+    printError("LoadModelPlus 5");
 	
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m->ib);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, m->numIndices*sizeof(GLuint), m->indexArray, GL_STATIC_DRAW);
+
+    printError("LoadModelPlus 6");
 	
 	return m;
-}
 }
