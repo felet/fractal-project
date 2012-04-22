@@ -11,13 +11,13 @@ float lookAtPosX = 50;
 float lookAtPosY = 50;
 float lookAtPosZ = 50;
 
-float cameraPosX = -35;
+float cameraPosX = -50;
 float cameraPosY = 50;
-float cameraPosZ = -100;
+float cameraPosZ = -150;
 float drot = 0;
 
 #define near 1.0
-#define far 500.0
+#define far 900.0
 #define right 0.5
 #define left -0.5
 #define top 0.5
@@ -28,12 +28,12 @@ GLfloat projectionMatrix[] = {  2.0f*near/(right-left), 0.0f,           (right+l
                                 0.0f, 0.0f, -(far + near)/(far - near), -2*far*near/(far - near),
                                 0.0f, 0.0f,                             -1.0f,                     0.0f };
 
-Point3D lightSourcesColorsArr[] = { {1.0f, 0.0f, 0.0f}, // Red light
-                                 {0.0f, 1.0f, 0.0f}, // Green light
-                                 {0.0f, 0.0f, 1.0f}, // Blue light
+Point3D lightSourcesColorsArr[] = { {0.0f, 0.0f, 0.0f}, // Red light
+                                 {0.0f, 0.0f, 0.0f}, // Green light
+                                 {0.0f, 0.0f, 0.0f}, // Blue light
                                  {1.0f, 1.0f, 1.0f} }; // White light
 
-Point3D lightSourcesDirectionsPositions[] = { {10.0f, 5.0f, 0.0f}, // Red light, positional
+Point3D lightSourcesDirectionsPositions[] = { {-35.0f, 50.0f, -200.0f}, // Red light, positional
                                        {0.0f, 5.0f, 10.0f}, // Green light, positional
                                        {-1.0f, 0.0f, 0.0f}, // Blue light along X
                                        {0.0f, 0.0f, -1.0f} }; // White light along Z
@@ -96,13 +96,13 @@ GLubyte cubeIndices[36] = {0,3,2, 0,2,1,
 const int spongelvl = 4;
 const int dim = (int) pow(3,spongelvl);
 */
-int spongelvl = 4;
-int dim = 81; // 3^4
-#define DIM 81 // ersätt 81 med dim..
+int spongelvl = 3;
+int dim = 27; // 3^4
+#define DIM 27 // ersätt 81 med dim..
 GLfloat mengerTA[DIM][DIM][DIM][16]; 
 bool draw[DIM][DIM][DIM];
 GLfloat color[DIM][DIM][DIM][3];
-
+GLfloat color2[DIM][DIM][DIM][3];
 void lookAt(GLfloat px, GLfloat py, GLfloat pz,
                     GLfloat lx, GLfloat ly, GLfloat lz,
                     GLfloat vx, GLfloat vy, GLfloat vz,
@@ -123,7 +123,7 @@ void init(void)
 {
 	dumpInfo();
 	// GL inits
-	glClearColor(0.5,0.6,0.0,0);
+	glClearColor(0.3,0.3,0.3,0);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
 	//glFrontFace(GL_CW);
@@ -184,9 +184,16 @@ void init(void)
 	for(k=0;k<3;k++)
     	for (j=0;j<dim;j++)
         	for(l=0;l<dim;l++)
-                for(m=0;m<dim;m++)
+                for(m=0;m<dim;m++){
                     // color[m][l][j][k] = 0.005*(j+k+l+m);
-						color[m][l][j][k] = 1.0;
+						color[m][l][j][0] = 1.0;
+						color[m][l][j][1] = 0.0;
+						color[m][l][j][2] = 0.0;
+						color2[m][l][j][0] = 0.0;
+						color2[m][l][j][1] = 0.0;
+						color2[m][l][j][2] = 1.0;
+				
+			}
 	for(j=0;j<dim;j++)
 	{
         for(k=0;k<dim;k++)
@@ -205,7 +212,7 @@ void init(void)
 					}
 				if (draw) 
 				{
-					T(length*j,length*k,length*l,mengerTA[j][k][l] );
+					T(length*j,length*k,length*l,mengerTA[j][k][l]);
 				}
             }
         }
@@ -266,7 +273,7 @@ void display(){
     glUniform3f(glGetUniformLocation(program, "inColor"), 0.0,0.0,0.0);
     //glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_BYTE, NULL);
 
-    int j,k,l;
+    int i,j,k,l;
     for(j=0;j<dim;j++)
 	{
         for(k=0;k<dim;k++)
@@ -280,6 +287,31 @@ void display(){
 					Mult(camera, mengerTA[j][k][l],totalMatrix);
 					Mult(projectionMatrix, totalMatrix, totalMatrix);
 					drawObject(mylist,totalMatrix,0,color[j][k][l]);
+				}
+            }
+        }
+    }
+
+
+	GLfloat AM[16];
+	
+	
+for(i=0;i<12;i++)
+	for(j=0;j<dim;j++)
+	{
+        for(k=0;k<dim;k++)
+		{
+            for(l=0;l<dim;l++)
+			{
+				if (draw[j][k][l])
+				{	
+					T(100*i,0,0,AM);		
+					Mult(AM,mengerTA[j][k][l],AM);
+					Mult(projectionMatrix, AM, trans);
+    				glUniformMatrix4fv(glGetUniformLocation(program, "transformation"), 1, GL_TRUE, trans);
+					Mult(camera, AM,totalMatrix);
+					Mult(projectionMatrix, totalMatrix, totalMatrix);
+					drawObject(mylist,totalMatrix,0,color2[j][k][l]);
 				}
             }
         }
