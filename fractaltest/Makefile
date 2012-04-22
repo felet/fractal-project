@@ -13,7 +13,7 @@ OBJS=	fract.o \
 		GL_utilities.o \
 		LoadTGA.o \
 		VectorUtils2.o \
-		loadobj.o 
+#		loadobj.o 
 
 .PHONY: all
 all: fractal Makefile

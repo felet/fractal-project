@@ -2,8 +2,9 @@
 #define CUBE_HPP
 
 #include "GL_utilities.h"
+#include "loadobj.h"
 
-class Cube 
+class Cube
 {
     public:
         Cube();
@@ -13,8 +14,7 @@ class Cube
 
     private:
         GLuint program;
-        unsigned int vertexArrayObjID;
-        static const GLfloat vertices[9];
+        static Model *model;
 };
 
 #endif

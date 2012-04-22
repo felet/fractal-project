@@ -2,7 +2,10 @@
 
 out vec4 out_Color;
 
+in vec2 tst;
+
 void main(void)
 {
-	out_Color = vec4(1.0);
+    float color = tst.x;
+	out_Color = vec4(color);
 }
