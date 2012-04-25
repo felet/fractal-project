@@ -151,7 +151,7 @@ void AudioPlayer::doFFT()
     int elapsedByte;
     alGetSourcei(source, AL_BYTE_OFFSET, &elapsedByte);
 
-    for (int i = 0, iSample = elapsedByte/2-N/2; i < N; i++, iSample++)
+    for (int i = 0, iSample = elapsedByte/2-N/2; i < N; i++, iSample += 2)
     {
         if (iSample >= 0 || (unsigned int)iSample < headerData.dataBlockSize)
             fftIn[i] = (double)samplings[ iSample ];

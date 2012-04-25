@@ -1,15 +1,13 @@
 #version 150
 
+// For object
 in  vec3 in_Position;
 in  vec3 in_Normal;
 in  vec2 in_TextCoord;
 
-//uniform mat4 totalMatrix;
-
-out vec2 tst;
+uniform mat4 totalMatrix;
 
 void main(void)
 {
-    tst = in_TextCoord;
-	gl_Position = vec4(in_Position, 1.0);
+	gl_Position = vec4(in_Position, 1.0);//totalMatrix*vec4(in_Position, 1.0);
 }

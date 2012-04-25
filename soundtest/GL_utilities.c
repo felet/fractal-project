@@ -92,16 +92,16 @@ GLuint compileShaders(const char *vs, const char *fs)
 GLuint loadShaders(const char *vertFileName, const char *fragFileName)
 // TO DO: Add geometry shader support
 {
+	// const 
 	char *vs, *fs;
 	GLuint p;
 	
 	vs = readFile((char *)vertFileName);
 	fs = readFile((char *)fragFileName);
-	if ((vs==NULL)||(fs==NULL)) // bug fixed 120126
+	if ((vs==NULL)||(fs==NULL))
 	{
 		printf("Loading shaders failed.\n");
 		return 0;
-		// Some better error reporting desired.
 	}
 	
 	p = compileShaders(vs, fs);
@@ -130,4 +130,38 @@ void printError(const char *functionName)
    {
 	  fprintf (stderr, "GL error 0x%X detected in %s\n", error, functionName);
    }
+}
+
+
+
+
+
+// Keymap mini manager
+// Important! Uses glutKeyboardFunc/glutKeyboardUpFunc so you can't use them
+// elsewhere or they will conflict.
+
+char keymap[256];
+
+char keyIsDown(unsigned char c)
+{
+	return keymap[(unsigned int)c];
+}
+
+void keyUp(unsigned char key, int x, int y)
+{
+	keymap[(unsigned int)key] = 0;
+}
+
+void keyDown(unsigned char key, int x, int y)
+{
+	keymap[(unsigned int)key] = 1;
+}
+
+void initKeymapManager()
+{
+	int i;
+	for (i = 0; i < 256; i++) keymap[i] = 0;
+	
+	glutKeyboardFunc(keyDown);
+	glutKeyboardUpFunc(keyUp);
 }

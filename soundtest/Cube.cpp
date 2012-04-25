@@ -24,6 +24,10 @@ void Cube::init(GLuint programIn)
 
 void Cube::draw()
 {
+    printError("Pre Cube::draw()");
+
     DrawModel(model);
+
+    printError("End Cube::draw()");
 }
 
