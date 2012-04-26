@@ -1,9 +1,9 @@
 #version 150
 
-in vec3 color;
-uniform mat3 inColor;
+uniform vec3 inColor;
 
 out vec4 out_Color;
+
 in vec3 normal;
 in vec3 position_to_frag;
 in vec2 TexCoord;
@@ -21,6 +21,7 @@ vec3 sum = vec3(0.0f);
 vec3 r,v;
 void main(void)
 {
+        
         if(settexture==1){
             out_Color = texture(texUnit, TexCoord);
         }
@@ -43,9 +44,9 @@ void main(void)
                     sum = sum + lightSourcesColorArr[i] * pow(max(dot(r,v),0.0f), specularExponent[i]);
                 }
             }
-            sum+= normalize(color);
-            //sum = normalize(sum);
-            out_Color = texture(texUnit,TexCoord);
-            //out_Color = vec4(sum, 1.0 );
+
+            out_Color = vec4(sum, 1.0 );
         }
+        
+    //out_Color = vec4(inColor,1.0);
 }
