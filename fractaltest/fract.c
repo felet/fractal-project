@@ -47,18 +47,18 @@ GLfloat projectionMatrix[] = {  2.0f*near/(right-left), 0.0f,           (right+l
                                 0.0f, 0.0f, -(far + near)/(far - near), -2*far*near/(far - near),
                                 0.0f, 0.0f,                             -1.0f,                     0.0f };
 
-Point3D lightSourcesColorsArr[] = { {1.0f, 0.0f, 0.0f}, // Red light
+Point3D lightSourcesColorsArr[] = { {0.0f, 0.0f, 0.0f}, // Red light
                                  {0.0f, 0.0f, 0.0f}, // Green light
-                                 {0.0f, 0.0f, 0.0f}, // Blue light
+                                 {0.0f, 0.0f, 1.0f}, // Blue light
                                  {1.0f, 1.0f, 1.0f} }; // White light
 
 Point3D lightSourcesDirectionsPositions[] = { {-35.0f, 50.0f, -200.0f}, // Red light, positional
-                                       {0.0f, 5.0f, 10.0f}, // Green light, positional
-                                       {-1.0f, 0.0f, 0.0f}, // Blue light along X
+                                       {-35.0f, 50.0f, 200.0f}, // Green light, positional
+                                       {-20.0f, 20.0f, -100.0f}, // Blue light along X
                                        {0.0f, 0.0f, -1.0f} }; // White light along Z
 
-GLfloat specularExponent[] = {10.0, 20.0, 60.0, 5.0};
-GLint isDirectional[] = {0,0,1,1};
+GLfloat specularExponent[] = {10.0, 10.0, 10.0, 5.0};
+GLint isDirectional[] = {0,0,0,1};
 
 GLuint program;
 GLuint *tex1,*tex2; //Texture pointer
@@ -125,9 +125,9 @@ GLubyte cubeIndices[36] = {0,3,2, 0,2,1,
 const int spongelvl = 4;
 const int dim = (int) pow(3,spongelvl);
 */
-int spongelvl = 4;
-int dim = 81; // 3^4
-#define DIM 81 // ersätt 81 med dim..
+int spongelvl = 3;
+int dim = 27; // 3^4
+#define DIM 27 // ersätt 81 med dim..
 GLfloat mengerTA[DIM][DIM][DIM][16]; 
 bool draw[DIM][DIM][DIM];
 GLfloat color[DIM][DIM][DIM][3];
@@ -413,6 +413,19 @@ void drawObject(const CubeList *l, GLfloat* tm, int offset, GLfloat *color){
     //Draw object
 	c = list_get_cube(tl);
 
+    glBindBuffer(GL_ARRAY_BUFFER, c.normalBufferObjID);
+    glBufferData(GL_ARRAY_BUFFER, 8*3*sizeof(GLfloat), c.n, GL_STATIC_DRAW);
+    glVertexAttribPointer(glGetAttribLocation(program, "in_Normal"), 3, GL_FLOAT, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(glGetAttribLocation(program, "in_Normal"));
+
+        // VBO for vertex data
+    glBindBuffer(GL_ARRAY_BUFFER, c.vertexBufferObjID);
+    glBufferData(GL_ARRAY_BUFFER, 8*3*sizeof(GLfloat), c.v, GL_STATIC_DRAW);
+    glVertexAttribPointer(glGetAttribLocation(program, "in_Position"), 3, GL_FLOAT, GL_FALSE, 0, 0); 
+    glEnableVertexAttribArray(glGetAttribLocation(program, "in_Position"));
+
+
+
     //Upload to shader
     glUniformMatrix4fv(glGetUniformLocation(program, "totalMatrix"), 1, GL_TRUE, tm);
    // glUniform3f(glGetUniformLocation(program, "inColor"), color[0], color[1] ,color[2]);
@@ -499,9 +512,9 @@ void uploadCube(Cube *c){
     glVertexAttribPointer(glGetAttribLocation(program, "in_Position"), 3, GL_FLOAT, GL_FALSE, 0, 0); 
     glEnableVertexAttribArray(glGetAttribLocation(program, "in_Position"));
 
-    // VBO for normal data TODO FIXA
+    // VBO for normal data 
     glBindBuffer(GL_ARRAY_BUFFER, c->normalBufferObjID);
-    glBufferData(GL_ARRAY_BUFFER, 8*3*sizeof(GLfloat), c->n, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, 8*3*sizeof(GLfloat), &normals, GL_STATIC_DRAW);
     glVertexAttribPointer(glGetAttribLocation(program, "in_Normal"), 3, GL_FLOAT, GL_FALSE, 0, 0);
     glEnableVertexAttribArray(glGetAttribLocation(program, "in_Normal"));
    

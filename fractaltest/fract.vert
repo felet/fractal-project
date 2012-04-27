@@ -13,9 +13,11 @@ uniform mat4 totalMatrix;
 uniform mat4 transformation;
 uniform int setTexture;
 vec4 position;
-
+out vec3 pos;
+out vec3 colornorm;
 void main(void)
 {
+    colornorm = in_Normal;
     color = in_Color;
     if(setTexture == 0)
         TexCoord = inTexCoord;
@@ -23,6 +25,7 @@ void main(void)
     {
         position = transformation*vec4(in_Position, 1.0);
         TexCoord = normalize(position.xy);
+        pos = in_Position;
     }
 
     gl_Position = totalMatrix*vec4(in_Position, 1.0);
