@@ -1,10 +1,48 @@
 #version 150
 
-out vec4 out_Color;
+uniform vec3 lightSourcesDirPosArr[4];
+uniform vec3 lightSourcesColorArr[4];
+uniform float specularExponent[4];
+uniform bool isDirectional[4];
 
-uniform vec3 color;
+uniform vec3 camera_position;
+uniform vec3 amplitude;
+
+in vec3 frag_Position;
+in vec3 frag_Normal;
+
+out vec4 out_Color;
 
 void main(void)
 {
-	out_Color = vec4(color, 1.0);
+    /*
+    vec3 r, v, lightSourcesDirPos;
+    vec3 sum = vec3(0.0f);
+
+    for(int i=0; i < 4; i++)
+    {
+        lightSourcesDirPos = normalize(lightSourcesDirPosArr[i]);
+        v = normalize(camera_position - frag_Position);
+
+        if(isDirectional[i])
+        {
+            lightSourcesDirPos = normalize(lightSourcesDirPosArr[i]);
+            r = normalize(2 * frag_Normal * dot(lightSourcesDirPos, frag_Normal) - lightSourcesDirPos);
+            sum = sum + lightSourcesColorArr[i] * max(dot(lightSourcesDirPos, frag_Normal), 0.0f);
+            sum = sum + lightSourcesColorArr[i] * pow(max(dot(r, v),0.0f), specularExponent[i]);
+        }
+        else
+        {
+            r = normalize(2 * frag_Normal * dot(normalize(lightSourcesDirPos - frag_Position), frag_Normal) - normalize(lightSourcesDirPos - frag_Position));
+            sum = sum + lightSourcesColorArr[i] * max(dot(frag_Normal, normalize(lightSourcesDirPos - frag_Position)), 0.0f);
+            sum = sum + lightSourcesColorArr[i] * pow(max(dot(r, v), 0.0f), specularExponent[i]);
+        }
+    }
+
+    out_Color = vec4(sum, 1.0);
+*/ 
+    vec3 light = vec3(-0.6, 0.6, 0.6);
+    float shade = dot(frag_Normal, normalize(light));
+    //out_Color = vec4(vec3(shade)*amplitude, 1.0);
+    out_Color = vec4(amplitude, 1.0);
 }
