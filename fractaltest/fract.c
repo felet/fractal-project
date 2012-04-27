@@ -7,15 +7,29 @@
 
 //#include <list>
 
+//Look at position
 float lookAtPosX = 20;
 float lookAtPosY = 20;
 float lookAtPosZ = 20;
 
+//Camera Position
 float cameraPosX = -5;
 float cameraPosY = 20;
 float cameraPosZ = -10;
+
+//Rotation
+float xrot = 0;
+float yrot = 0;
+float angle = 0;
 float drot = 0;
 
+//Previous mouse position
+float lastx, lasty;
+
+//Camera speed
+float cSpeed = 0.5;
+
+//View frustum
 #define near 1.0
 #define far 900.0
 #define right 0.5
@@ -23,12 +37,17 @@ float drot = 0;
 #define top 0.5
 #define bottom -0.5
 
+//Texture constants
+#define texOnly 0
+#define texLight 1
+#define texGenerated 2
+
 GLfloat projectionMatrix[] = {  2.0f*near/(right-left), 0.0f,           (right+left)/(right-left), 0.0f,
                                 0.0f, 2.0f*near/(top-bottom),           (top+bottom)/(top-bottom), 0.0f,
                                 0.0f, 0.0f, -(far + near)/(far - near), -2*far*near/(far - near),
                                 0.0f, 0.0f,                             -1.0f,                     0.0f };
 
-Point3D lightSourcesColorsArr[] = { {0.0f, 0.0f, 0.0f}, // Red light
+Point3D lightSourcesColorsArr[] = { {1.0f, 0.0f, 0.0f}, // Red light
                                  {0.0f, 0.0f, 0.0f}, // Green light
                                  {0.0f, 0.0f, 0.0f}, // Blue light
                                  {1.0f, 1.0f, 1.0f} }; // White light
@@ -42,7 +61,7 @@ GLfloat specularExponent[] = {10.0, 20.0, 60.0, 5.0};
 GLint isDirectional[] = {0,0,1,1};
 
 GLuint program;
-GLuint *tex; //Texture pointer
+GLuint *tex1,*tex2; //Texture pointer
 
 unsigned int vertexArrayID;
 unsigned int vertexBufferID;
@@ -106,9 +125,9 @@ GLubyte cubeIndices[36] = {0,3,2, 0,2,1,
 const int spongelvl = 4;
 const int dim = (int) pow(3,spongelvl);
 */
-int spongelvl = 3;
-int dim = 27; // 3^4
-#define DIM 27 // ersätt 81 med dim..
+int spongelvl = 4;
+int dim = 81; // 3^4
+#define DIM 81 // ersätt 81 med dim..
 GLfloat mengerTA[DIM][DIM][DIM][16]; 
 bool draw[DIM][DIM][DIM];
 GLfloat color[DIM][DIM][DIM][3];
@@ -120,7 +139,9 @@ void lookAt(GLfloat px, GLfloat py, GLfloat pz,
                     GLfloat vx, GLfloat vy, GLfloat vz,
                     GLfloat *m);
 void OnTimer(int value);
-void keyboardMovement();
+void keyboardMovement(unsigned char key, int x, int y);
+//void mouseMovement(int x, int y);
+//void camera();
 CubeList *list_create(Cube data);
 CubeList *list_add(CubeList *node, Cube data);
 int list_remove(CubeList *list, CubeList *node);
@@ -149,8 +170,12 @@ void init(void)
 
     // Load texture
   //  LoadTGATextureSimple("SkyBox512.tga", &tex);
-    LoadTGATextureSimple("awesome.tga",&tex);
+    LoadTGATextureSimple("SkyBox512.tga",&tex1);
+    LoadTGATextureSimple("awesome.tga",&tex2);
     printError("init texture");
+
+    
+    glUniform1i(glGetUniformLocation(program, "texUnit"), 0);
 
 	// Load model
     skybox = LoadModelPlus("skybox.obj", program, "in_Position", "in_Normal", "inTexCoord");
@@ -229,11 +254,8 @@ void init(void)
 }
 
 void display(){
-	//printf("display\n");
-	keyboardMovement();
-
-   // float t = glutGet(GLUT_ELAPSED_TIME)/1000.0f; //Time variable
-    int settexture = 0; //Use no texture, settexture = 1 to enable texture
+    // float t = glutGet(GLUT_ELAPSED_TIME)/1000.0f; //Time variable
+    int setTexture = texOnly;
     // clear the screen
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -250,7 +272,7 @@ void display(){
     // Texture upload
     /*glBindTexture(GL_TEXTURE_2D, tex);
     glUniform1i(glGetUniformLocation(program, "texUnit"), 0);
-    glUniform1i(glGetUniformLocation(program, "settexture"), settexture);*/
+    glUniform1i(glGetUniformLocation(program, "setTexture"), setTexture);*/
     
 	// Upload lightsources
     glUniform3fv(glGetUniformLocation(program, "lightSourcesDirPosArr"), 4, &lightSourcesDirectionsPositions[0].x);
@@ -269,12 +291,12 @@ void display(){
 	//Mult(rot, trans, trans);
     //Mult(camera, trans, totalMatrix); 
     //Mult(projectionMatrix, totalMatrix, totalMatrix);
-    //glUniform1i(glGetUniformLocation(program, "settexture"), settexture);
+    //glUniform1i(glGetUniformLocation(program, "setTexture"), setTexture);
 
 	// Upload matrices
   /* glUniformMatrix4fv(glGetUniformLocation(program, "totalMatrix"), 1, GL_TRUE, totalMatrix);
     glUniformMatrix4fv(glGetUniformLocation(program, "rotation"), 1, GL_TRUE, rot);
-    glUniform1i(glGetUniformLocation(program, "settexture"), settexture);
+    glUniform1i(glGetUniformLocation(program, "setTexture"), setTexture);
     glUniformMatrix4fv(glGetUniformLocation(program, "transformation"), 1, GL_TRUE, trans);
 	*/
     // Cube
@@ -291,7 +313,6 @@ void display(){
     {
         skyboxmatrix[j] = camera[j];
     }
-    settexture = 1;
     skyboxmatrix[3]=0;
     skyboxmatrix[7]=0;
     skyboxmatrix[11]=0;
@@ -300,15 +321,19 @@ void display(){
 
     // Texture upload
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, tex);
-    glUniform1i(glGetUniformLocation(program, "settexture"), settexture);
+    glBindTexture(GL_TEXTURE_2D, tex1);
+    glUniform1i(glGetUniformLocation(program, "setTexture"), setTexture);
     DrawModel(skybox);
-    settexture = 0;
-    glUniform1i(glGetUniformLocation(program, "settexture"), settexture);
-
     printError("Skybox");
+    
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
+
+    //Texture upload for cubes
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, tex2);
+    setTexture = texLight;
+    glUniform1i(glGetUniformLocation(program, "setTexture"), setTexture);
 
     for(j=0;j<dim;j++)
 	{
@@ -366,38 +391,13 @@ int main(int argc, char *argv[])
 	glutDisplayFunc(display); 
 	init();
 	glutTimerFunc(20, &OnTimer, 0);
+
+    //glutPassiveMotionFunc(mouseMovement);
+    glutKeyboardFunc(keyboardMovement); 
+
 	glutMainLoop();
 	return 0;
 }
-/*
-CubeList *list_create()
-{
-	CubeList *node;
-	if(!(node=malloc(sizeof(CubeList)))) return NULL;
-	node->cube=NULL;
-	node->next=NULL;
-	return node;
-}
-*/
-/*
-nya <=> gamla
-5 <=> 0
-7 <=> 1
-3 <=> 2
-1 <=> 3
-4 <=> 4
-6 <=> 5
-2 <=> 6
-0 <=> 7
-- - -
-+ - -
-+ + -
-- + -
-- - +
-+ - +
-+ + +
-- + +
-*/
 void drawObject(const CubeList *l, GLfloat* tm, int offset, GLfloat *color){
 	CubeList *tl = l;
 	Cube c;
@@ -420,6 +420,25 @@ void drawObject(const CubeList *l, GLfloat* tm, int offset, GLfloat *color){
     glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_BYTE, 0L);
 }
 
+/*
+nya <=> gamla
+5 <=> 0
+7 <=> 1
+3 <=> 2
+1 <=> 3
+4 <=> 4
+6 <=> 5
+2 <=> 6
+0 <=> 7
+- - -
++ - -
++ + -
+- + -
+- - +
++ - +
++ + +
+- + +
+*/
 void createCube(Cube o, CubeList *list){
 double length = abs(o.v[7][0] - o.v[6][0]);
 double radius = length/6.0;
@@ -461,13 +480,7 @@ new.v[6][2] = middle[2] + radius;
 new.v[7][0] = middle[0] - radius;
 new.v[7][1] = middle[1] + radius;
 new.v[7][2] = middle[2] + radius;
-/*
-printf("\n mittpunkt x: y: z: %f", new.v[j][i]);
-int i,j;
-    for (i=0;i<3;i++)
-        for(j=0;j<8;j++)
-    printf("\n %f", new.v[j][i]);
- */
+
 uploadCube(&new);
 list_add(list,new);
 }
@@ -614,63 +627,30 @@ void OnTimer(int value)
     glutTimerFunc(20, &OnTimer, value);
 }
 
-//TODO: fixa ordentlig kamera
-/*
-void keyboardMovement()
-{
-    if (keyIsDown('w')){
-        float tempX = (lookAtPosX - cameraPosX)/4;
-        float tempY = (lookAtPosY - cameraPosY)/4;
-        float tempZ = (lookAtPosZ - cameraPosZ)/4;
-        
-        cameraPosX += tempX;
-        cameraPosY += tempY;
-        cameraPosZ += tempZ;
-
-        lookAtPosX += tempX;
-        lookAtPosY += tempY;
-        lookAtPosZ += tempZ;
-
-    }
-    else if (keyIsDown('s')){
-        float tempX = (lookAtPosX - cameraPosX)/4;
-        float tempY = (lookAtPosY - cameraPosY)/4;
-        float tempZ = (lookAtPosZ - cameraPosZ)/4;
-
-        cameraPosX -= tempX;
-        cameraPosY -= tempY;
-        cameraPosZ -= tempZ;
-
-        lookAtPosX -= tempX;
-        lookAtPosY -= tempY;
-        lookAtPosZ -= tempZ;
-    }
-
-    if (keyIsDown('a')){
-
-        drot += 0.05;
-        lookAtPosX = cameraPosX + sin(drot);
-        lookAtPosZ = cameraPosZ + cos(drot);
-
-    }
-    else if (keyIsDown('d')){
-
-        drot -= 0.05;
-        lookAtPosX = cameraPosX + sin(drot);
-        lookAtPosZ = cameraPosZ + cos(drot);
-    }
-    if (keyIsDown('p')){
-
-        lookAtPosY += 0.05;
-    }
-    else if (keyIsDown('l')){
-        lookAtPosY -= 0.05;
-    }
-    */
 // TODO  sätt längden i w/s ist för a/d så att avståndet till punkten vi snurrar runt är konstant
-void keyboardMovement()
-{
-    if (keyIsDown('w')){
+void keyboardMovement (unsigned char key, int x, int y) {
+    if (key=='q')
+    {
+        cameraPosX += cSpeed;
+        lookAtPosX += cSpeed;
+    }
+
+    if (key=='e')
+    {
+        cameraPosX -= cSpeed;
+        lookAtPosX -= cSpeed;
+    }
+
+    if (key=='p'){
+
+        lookAtPosY += cSpeed;
+    }
+   else if (key=='l'){
+        lookAtPosY -= cSpeed;
+    }
+
+    if (key=='w')
+    {
         float tempX = (lookAtPosX - cameraPosX)/50;
         float tempY = (lookAtPosY - cameraPosY)/50;
         float tempZ = (lookAtPosZ - cameraPosZ)/50;
@@ -684,7 +664,9 @@ void keyboardMovement()
         lookAtPosZ += tempZ;
 
     }
-    else if (keyIsDown('s')){
+
+    if (key=='s')
+    {
         float tempX = (lookAtPosX - cameraPosX)/50;
         float tempY = (lookAtPosY - cameraPosY)/50;
         float tempZ = (lookAtPosZ - cameraPosZ)/50;
@@ -698,21 +680,8 @@ void keyboardMovement()
         lookAtPosZ -= tempZ;
     }
 
-    if (keyIsDown('a')){
-
-        drot += 0.05;
-        Point3D camera, lookAt, temp;
-        SetVector(cameraPosX,cameraPosY,cameraPosZ,&camera);
-        SetVector(lookAtPosX,lookAtPosY,lookAtPosZ,&lookAt);
-        VectorSub(&camera,&lookAt,&temp);
-        float length =  DotProduct(&temp,&temp);
-        length =  sqrt(length);
-        cameraPosX =  lookAtPosX + length*sin(drot);
-        cameraPosZ =  lookAtPosZ + length*cos(drot);
-
-    }
-    else if (keyIsDown('d')){
-
+    if (key=='d')
+    {
         drot -= 0.05;
         Point3D camera, lookAt, temp;
         SetVector(cameraPosX,cameraPosY,cameraPosZ,&camera);
@@ -723,24 +692,36 @@ void keyboardMovement()
         cameraPosX =  lookAtPosX + length*sin(drot);
         cameraPosZ =  lookAtPosZ + length*cos(drot);
     }
-    if(keyIsDown('q') || keyIsDown('Q'))
-    {
-         float tempX = (lookAtPosX - cameraPosX)/50;
-        cameraPosX += tempX;
-        lookAtPosX += tempX;
-    }
-    else if(keyIsDown('e') || keyIsDown('E'))
-    {
-         float tempX = (lookAtPosX - cameraPosX)/50;
-        cameraPosX -= tempX;
-        lookAtPosX += tempX;
-    }
-    if (keyIsDown('p')){
 
-        lookAtPosY += 0.3;
-    }
-    else if (keyIsDown('l')){
-        lookAtPosY -= 0.3;
+    if (key=='a')
+    {
+        drot += 0.05;
+        Point3D camera, lookAt, temp;
+        SetVector(cameraPosX,cameraPosY,cameraPosZ,&camera);
+        SetVector(lookAtPosX,lookAtPosY,lookAtPosZ,&lookAt);
+        VectorSub(&camera,&lookAt,&temp);
+        float length =  DotProduct(&temp,&temp);
+        length =  sqrt(length);
+        cameraPosX =  lookAtPosX + length*sin(drot);
+        cameraPosZ =  lookAtPosZ + length*cos(drot);
     }
 
+    if (key==27)
+    {
+        exit(0);
+    }
 }
+/*
+void mouseMovement(int x, int y) {
+    int diffx=x-lastx; 
+    int diffy=y-lasty;
+    lastx=x; 
+    lasty=y;
+    xrot += (float) diffy; //set the xrot to xrot with the addition
+    yrot += (float) diffx;    //set the xrot to yrot with the addition
+}
+
+void camera (void) {
+    glRotatef(xrot,1.0,0.0,0.0);
+    glRotatef(yrot,0.0,1.0,0.0);
+}*/
