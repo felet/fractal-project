@@ -15,9 +15,9 @@ void Cube::init(GLuint programIn)
 
     model = LoadModelPlus(  (char*)"cubeplus.obj",
                             program,
-                            (char*)"in_Position",
-                            (char*)"in_Normal",
-                            (char*)"in_TexCoord");
+                            (char*)"vert_Position",
+                            (char*)"vert_Normal",
+                            (char*)"vert_TexCoord");
 
     printError("End Cube::init()");
 }
