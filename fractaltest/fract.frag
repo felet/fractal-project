@@ -1,6 +1,7 @@
 #version 150
 
 in vec3 color;
+in vec3 colornorm;
 uniform mat3 inColor;
 
 out vec4 out_Color;
@@ -17,8 +18,10 @@ uniform bool isDirectional[4];
 
 uniform mat4 totalMatrix;
 uniform vec3 camera_position;
+in vec3 pos;
 vec3 sum = vec3(0.0f);
 vec3 r,v;
+vec3 t;
 void main(void)
 {
         if(setTexture==0){
@@ -51,7 +54,11 @@ void main(void)
         }
         else if(setTexture==2)
         {
-            out_Color = normalize(vec4(TexCoord.x*0.5, TexCoord.y*0.2, 0.2, 1.0));
+           // out_Color = normalize(vec4(TexCoord.x*0.5, TexCoord.y*0.2, 0.2, 1.0));
+           out_Color = vec4(pos,1.0);
+        }
+        else if(setTexture==3){
+            out_Color = texture(texUnit, TexCoord);
         }
         else
             out_Color = vec4(0.0,0.0,0.0,1.0);
