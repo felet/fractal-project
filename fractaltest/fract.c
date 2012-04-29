@@ -53,7 +53,7 @@ Point3D lightSourcesColorsArr[] = { {1.0f, 0.0f, 0.0f}, // Red light
                                  {1.0f, 1.0f, 1.0f} }; // White light
 
 Point3D lightSourcesDirectionsPositions[] = { {-235.0f, 250.0f, -200.0f}, // Red light, positional
-                                       {235.0f, 250.0f, 250.0f}, // Green light, positional
+                                       {-235.0f, 250.0f, 250.0f}, // Green light, positional
                                        {-220.0f, 220.0f, -150.0f}, // Blue light along X
                                        {0.0f, 0.0f, -1.0f} }; // White light along Z
 
@@ -100,17 +100,17 @@ GLfloat normals[8][3] = {
 {-0.58,0.58,0.58}};
 
 typedef struct _Cube{
-unsigned int vertexArrayObjID;
-unsigned int vertexBufferObjID;
-unsigned int indexBufferObjID;
-unsigned int normalBufferObjID;
+    unsigned int vertexArrayObjID;
+    unsigned int vertexBufferObjID;
+    unsigned int indexBufferObjID;
+    unsigned int normalBufferObjID;
     GLfloat v[8][3];
 	GLfloat n[8][3];
 } Cube;
 
 typedef struct _CubeList{
     Cube cube;
-    struct CubeList* next;
+    struct _CubeList* next;
 } CubeList;
 
 CubeList *mylist;
@@ -170,8 +170,8 @@ void init(void)
 
     // Load texture
   //  LoadTGATextureSimple("SkyBox512.tga", &tex);
-    LoadTGATextureSimple("SkyBox512.tga",&tex1);
-    LoadTGATextureSimple("awesome.tga",&tex2);
+    LoadTGATextureSimple("SkyBox512.tga",tex1);
+    LoadTGATextureSimple("awesome.tga",tex2);
     printError("init texture");
 
     glUniform1i(glGetUniformLocation(program, "texUnit"), 0);
@@ -226,7 +226,7 @@ void init(void)
     }
     printf("\n vi har : %d stycken kuber\n",listlength);
 	GLfloat length = abs(list_get_cube(mylist).v[7][0] - list_get_cube(mylist).v[6][0]);
-	int m,j,k,l;
+	int j,k,l;
 
 	for(j=0;j<dim;j++)
 	{
@@ -258,9 +258,9 @@ void display(){
 
     // Clear the screen
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    int i,j,k,l;
+    int j,k,l;
 	// Transformation matrices
-    GLfloat refmat[16], camera[16], rot[16], trans[16], totalMatrix[16], skyboxmatrix[16];
+    GLfloat camera[16], rot[16], trans[16], totalMatrix[16], skyboxmatrix[16];
 
     lookAt( cameraPosX, cameraPosY, cameraPosZ, // Camera pos
             lookAtPosX, lookAtPosY, lookAtPosZ, // Look at pos
@@ -305,7 +305,7 @@ void display(){
 
     // Texture upload
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, tex1);
+    glBindTexture(GL_TEXTURE_2D, *tex1);
     DrawModel(skybox);
     printError("Skybox");
 
@@ -314,7 +314,7 @@ void display(){
 
     //Texture upload for cubes
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, tex2);
+    glBindTexture(GL_TEXTURE_2D, *tex2);
     setTexture = 1;
     glUniform1i(glGetUniformLocation(program, "setTexture"), setTexture);
 
