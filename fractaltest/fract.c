@@ -47,17 +47,17 @@ GLfloat projectionMatrix[] = {  2.0f*near/(right-left), 0.0f,           (right+l
                                 0.0f, 0.0f, -(far + near)/(far - near), -2*far*near/(far - near),
                                 0.0f, 0.0f,                             -1.0f,                     0.0f };
 
-Point3D lightSourcesColorsArr[] = { {0.0f, 0.0f, 0.0f}, // Red light
-                                 {0.0f, 0.0f, 0.0f}, // Green light
+Point3D lightSourcesColorsArr[] = { {1.0f, 0.0f, 0.0f}, // Red light
+                                 {0.0f, 1.0f, 0.0f}, // Green light
                                  {0.0f, 0.0f, 1.0f}, // Blue light
                                  {1.0f, 1.0f, 1.0f} }; // White light
 
-Point3D lightSourcesDirectionsPositions[] = { {-35.0f, 50.0f, -200.0f}, // Red light, positional
-                                       {-35.0f, 50.0f, 200.0f}, // Green light, positional
-                                       {-20.0f, 20.0f, -100.0f}, // Blue light along X
+Point3D lightSourcesDirectionsPositions[] = { {-235.0f, 250.0f, -200.0f}, // Red light, positional
+                                       {235.0f, 250.0f, 250.0f}, // Green light, positional
+                                       {-220.0f, 220.0f, -150.0f}, // Blue light along X
                                        {0.0f, 0.0f, -1.0f} }; // White light along Z
 
-GLfloat specularExponent[] = {10.0, 10.0, 10.0, 5.0};
+GLfloat specularExponent[] = {10.0, 15.0, 20.0, 10.0};
 GLint isDirectional[] = {0,0,0,1};
 
 GLuint program;
@@ -214,7 +214,9 @@ void init(void)
     obj.vertexArrayObjID = vertexArrayID;
     obj.vertexBufferObjID = vertexBufferID;
     obj.indexBufferObjID = indexBufferID;
+    uploadCube(&obj);
     mylist = list_create(obj);
+
     //createCube(obj,mylist);
     CubeList *tl = mylist;
     int listlength = 0;
@@ -287,7 +289,7 @@ void display(){
     T(0, 0, 0, trans);
 
     //skybox
-    int setTexture = texOnly;
+    int setTexture = 0; 
     glUniform1i(glGetUniformLocation(program, "setTexture"), setTexture);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
@@ -393,20 +395,6 @@ void drawObject(const CubeList *l, GLfloat* tm, int offset, GLfloat *color){
 
     //Draw object
 	c = list_get_cube(tl);
-
-    glBindBuffer(GL_ARRAY_BUFFER, c.normalBufferObjID);
-    glBufferData(GL_ARRAY_BUFFER, 8*3*sizeof(GLfloat), c.n, GL_STATIC_DRAW);
-    glVertexAttribPointer(glGetAttribLocation(program, "in_Normal"), 3, GL_FLOAT, GL_FALSE, 0, 0);
-    glEnableVertexAttribArray(glGetAttribLocation(program, "in_Normal"));
-
-        // VBO for vertex data
-    glBindBuffer(GL_ARRAY_BUFFER, c.vertexBufferObjID);
-    glBufferData(GL_ARRAY_BUFFER, 8*3*sizeof(GLfloat), c.v, GL_STATIC_DRAW);
-    glVertexAttribPointer(glGetAttribLocation(program, "in_Position"), 3, GL_FLOAT, GL_FALSE, 0, 0);
-    glEnableVertexAttribArray(glGetAttribLocation(program, "in_Position"));
-
-
-
     //Upload to shader
     glUniformMatrix4fv(glGetUniformLocation(program, "totalMatrix"), 1, GL_TRUE, tm);
    // glUniform3f(glGetUniformLocation(program, "inColor"), color[0], color[1] ,color[2]);
