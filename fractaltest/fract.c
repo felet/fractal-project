@@ -7,16 +7,9 @@
 
 //#include <list>
 
-//Look at position
-float lookAtPosX = 20;
-float lookAtPosY = 20;
-float lookAtPosZ = 20;
-
-//Camera Position
-float cameraPosX = -5;
-float cameraPosY = 20;
-float cameraPosZ = -10;
-
+// camera things
+Point3D lookat,campos,dir;
+GLfloat ang = 0.05;
 //Rotation
 float xrot = 0;
 float yrot = 0;
@@ -153,6 +146,11 @@ bool list_not_empty(CubeList *list);
 void drawObject(const CubeList *l, GLfloat *tm, int offset, GLfloat *color);
 void init(void)
 {
+	// initialize things related to the camera..
+	SetVector(20.0f,20.0f,20.0f,&lookat);
+	SetVector(-5.0f,20.0f,-10.0f,&campos);
+	VectorSub(&lookat, &campos, &dir);
+	Normalize(&dir);
 	dumpInfo();
 	// GL inits
 	glClearColor(0.3,0.3,0.3,0);
@@ -262,9 +260,9 @@ void display(){
 	// Transformation matrices
     GLfloat refmat[16], camera[16], rot[16], trans[16], totalMatrix[16], skyboxmatrix[16];
 
-    lookAt( cameraPosX, cameraPosY, cameraPosZ, // Camera pos
-            lookAtPosX, lookAtPosY, lookAtPosZ, // Look at pos
-			0.0, 1.0, 0.0,  					// Up vector
+    lookAt( campos.x, campos.y, campos.z, // Camera pos
+            lookat.x, lookat.y, lookat.z, // Look at pos
+			0.0, 1.0, 0.0, // Up vector
             camera);
 
     printError("pre display");
@@ -280,7 +278,7 @@ void display(){
     glUniform1fv(glGetUniformLocation(program, "specularExponent"), 4, specularExponent);
 
 	// Upload camera position (used in specular shading)
-    GLfloat camera_position[] = {(GLfloat)cameraPosX, (GLfloat)cameraPosY, (GLfloat)cameraPosZ};
+    GLfloat camera_position[] = {(GLfloat)campos.x, (GLfloat)campos.y, (GLfloat)campos.z};
     glUniform3fv(glGetUniformLocation(program, "camera_position"), 1, camera_position);
     glUniform1iv(glGetUniformLocation(program, "isDirectional"), 4, isDirectional);
 
@@ -609,86 +607,51 @@ void OnTimer(int value)
     glutTimerFunc(20, &OnTimer, value);
 }
 
-// TODO  sätt längden i w/s ist för a/d så att avståndet till punkten vi snurrar runt är konstant
+
 void keyboardMovement (unsigned char key, int x, int y) {
-    if (key=='q')
-    {
-        cameraPosX += cSpeed;
-        lookAtPosX += cSpeed;
-    }
+	if (key == 'w')
+	{	
+	 VectorSub(&lookat, &campos, &dir);
+	 Normalize(&dir);
+	 campos.x = campos.x+1.0f*dir.x;
+	 campos.y = campos.y+1.0f*dir.y;
+	 campos.z = campos.z+1.0f*dir.z;
+	 lookat.x = lookat.x+1.0f*dir.x;
+	 lookat.y = lookat.y+1.0f*dir.y;
+	 lookat.z = lookat.z+1.0f*dir.z;
+	 SetVector(campos.x,campos.y,campos.z,&campos);
+	}
+	 
+	else if (key=='s')
+	 {	
+	 VectorSub(&lookat, &campos, &dir);
+	 Normalize(&dir);
+	 campos.x = campos.x-1.0f*dir.x;
+	 campos.y = campos.y-1.0f*dir.y;
+	 campos.z = campos.z-1.0f*dir.z;
+	 lookat.x = lookat.x-1.0f*dir.x;
+	 lookat.y = lookat.y-1.0f*dir.y;
+	 lookat.z = lookat.z-1.0f*dir.z;
+	 SetVector(campos.x,campos.y,campos.z,&campos);
+	 }
+	  
+	 else if (key=='d')
+	 {
+	 VectorSub(&lookat, &campos, &dir);
+	 Normalize(&dir);
 
-    if (key=='e')
-    {
-        cameraPosX -= cSpeed;
-        lookAtPosX -= cSpeed;
-    }
-
-    if (key=='p'){
-
-        lookAtPosY += cSpeed;
-    }
-   else if (key=='l'){
-        lookAtPosY -= cSpeed;
-    }
-
-    if (key=='w')
-    {
-        float tempX = (lookAtPosX - cameraPosX)/50;
-        float tempY = (lookAtPosY - cameraPosY)/50;
-        float tempZ = (lookAtPosZ - cameraPosZ)/50;
-
-        cameraPosX += tempX;
-        cameraPosY += tempY;
-        cameraPosZ += tempZ;
-
-        lookAtPosX += tempX;
-        lookAtPosY += tempY;
-        lookAtPosZ += tempZ;
-
-    }
-
-    if (key=='s')
-    {
-        float tempX = (lookAtPosX - cameraPosX)/50;
-        float tempY = (lookAtPosY - cameraPosY)/50;
-        float tempZ = (lookAtPosZ - cameraPosZ)/50;
-
-        cameraPosX -= tempX;
-        cameraPosY -= tempY;
-        cameraPosZ -= tempZ;
-
-        lookAtPosX -= tempX;
-        lookAtPosY -= tempY;
-        lookAtPosZ -= tempZ;
-    }
-
-    if (key=='d')
-    {
-        drot -= 0.05;
-        Point3D camera, lookAt, temp;
-        SetVector(cameraPosX,cameraPosY,cameraPosZ,&camera);
-        SetVector(lookAtPosX,lookAtPosY,lookAtPosZ,&lookAt);
-        VectorSub(&camera,&lookAt,&temp);
-        float length =  DotProduct(&temp,&temp);
-        length =  sqrt(length);
-        cameraPosX =  lookAtPosX + length*sin(drot);
-        cameraPosZ =  lookAtPosZ + length*cos(drot);
-    }
-
-    if (key=='a')
-    {
-        drot += 0.05;
-        Point3D camera, lookAt, temp;
-        SetVector(cameraPosX,cameraPosY,cameraPosZ,&camera);
-        SetVector(lookAtPosX,lookAtPosY,lookAtPosZ,&lookAt);
-        VectorSub(&camera,&lookAt,&temp);
-        float length =  DotProduct(&temp,&temp);
-        length =  sqrt(length);
-        cameraPosX =  lookAtPosX + length*sin(drot);
-        cameraPosZ =  lookAtPosZ + length*cos(drot);
-    }
-
-    if (key==27)
+	 lookat.x = (float)(campos.x+cos(ang)*dir.x - sin(ang)*dir.z);
+	 lookat.z = (float)(campos.z+sin(ang)*dir.x + cos(ang)*dir.z);
+	 }
+	 
+	else if (key=='a')
+	 {
+	 VectorSub(&lookat, &campos, &dir);
+	 Normalize(&dir);
+	 lookat.x = (float)(campos.x+cos(-ang)*dir.x - sin(-ang)*dir.z);
+	 lookat.z = (float)(campos.z+sin(-ang)*dir.x + cos(-ang)*dir.z);
+	 }
+    else if (key==27)
     {
         exit(0);
     }
