@@ -165,3 +165,4 @@ void initKeymapManager()
 	glutKeyboardFunc(keyDown);
 	glutKeyboardUpFunc(keyUp);
 }
+
