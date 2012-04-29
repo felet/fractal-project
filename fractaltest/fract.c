@@ -174,7 +174,6 @@ void init(void)
     LoadTGATextureSimple("awesome.tga",&tex2);
     printError("init texture");
 
-    
     glUniform1i(glGetUniformLocation(program, "texUnit"), 0);
 
 	// Load model
@@ -204,7 +203,7 @@ void init(void)
     glGenBuffers(1, &colorBufferObjID);
     glBindBuffer(GL_ARRAY_BUFFER, colorBufferObjID);
     glBufferData(GL_ARRAY_BUFFER, 24*sizeof(GLfloat), colors, GL_STATIC_DRAW);
-    glVertexAttribPointer(glGetAttribLocation(program, "in_Color"), 3, GL_FLOAT, GL_FALSE, 0, 0); 
+    glVertexAttribPointer(glGetAttribLocation(program, "in_Color"), 3, GL_FLOAT, GL_FALSE, 0, 0);
     glEnableVertexAttribArray(glGetAttribLocation(program, "in_Color"));
     printError("init colors");
 
@@ -226,7 +225,6 @@ void init(void)
     printf("\n vi har : %d stycken kuber\n",listlength);
 	GLfloat length = abs(list_get_cube(mylist).v[7][0] - list_get_cube(mylist).v[6][0]);
 	int m,j,k,l;
-	
 
 	for(j=0;j<dim;j++)
 	{
@@ -244,7 +242,7 @@ void init(void)
 							draw[j][k][l] = false;
 						}
 					}
-				if (draw) 
+				if (draw)
 				{
 					T(length*j,length*k,length*l,mengerTA[j][k][l]);
 				}
@@ -255,10 +253,10 @@ void init(void)
 
 void display(){
     // float t = glutGet(GLUT_ELAPSED_TIME)/1000.0f; //Time variable
-    int setTexture = texOnly;
-    // clear the screen
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    // Clear the screen
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    int i,j,k,l;
 	// Transformation matrices
     GLfloat refmat[16], camera[16], rot[16], trans[16], totalMatrix[16], skyboxmatrix[16];
 
@@ -273,7 +271,7 @@ void display(){
     /*glBindTexture(GL_TEXTURE_2D, tex);
     glUniform1i(glGetUniformLocation(program, "texUnit"), 0);
     glUniform1i(glGetUniformLocation(program, "setTexture"), setTexture);*/
-    
+
 	// Upload lightsources
     glUniform3fv(glGetUniformLocation(program, "lightSourcesDirPosArr"), 4, &lightSourcesDirectionsPositions[0].x);
     glUniform3fv(glGetUniformLocation(program, "lightSourcesColorArr"), 4, &lightSourcesColorsArr[0].x);
@@ -287,26 +285,10 @@ void display(){
 	// Initialize matrices
     // TODO: Rotera ej ljuskällor
     T(0, 0, 0, trans);
-	//Ry(t,rot);
-	//Mult(rot, trans, trans);
-    //Mult(camera, trans, totalMatrix); 
-    //Mult(projectionMatrix, totalMatrix, totalMatrix);
-    //glUniform1i(glGetUniformLocation(program, "setTexture"), setTexture);
 
-	// Upload matrices
-  /* glUniformMatrix4fv(glGetUniformLocation(program, "totalMatrix"), 1, GL_TRUE, totalMatrix);
-    glUniformMatrix4fv(glGetUniformLocation(program, "rotation"), 1, GL_TRUE, rot);
-    glUniform1i(glGetUniformLocation(program, "setTexture"), setTexture);
-    glUniformMatrix4fv(glGetUniformLocation(program, "transformation"), 1, GL_TRUE, trans);
-	*/
-    // Cube
-    //glBindVertexArray(vertexArrayID);			// Select VAO
-   // glUniform3f(glGetUniformLocation(program, "inColor"), 0.0,0.0,0.0);
-    //glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_BYTE, NULL);
-
-    int i,j,k,l;    
-    
     //skybox
+    int setTexture = texOnly;
+    glUniform1i(glGetUniformLocation(program, "setTexture"), setTexture);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
     for (int j = 0; j < 16; j++)
@@ -322,17 +304,16 @@ void display(){
     // Texture upload
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, tex1);
-    glUniform1i(glGetUniformLocation(program, "setTexture"), setTexture);
     DrawModel(skybox);
     printError("Skybox");
-    
+
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
 
     //Texture upload for cubes
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, tex2);
-    setTexture = texLight;
+    setTexture = 1;
     glUniform1i(glGetUniformLocation(program, "setTexture"), setTexture);
 
     for(j=0;j<dim;j++)
@@ -355,7 +336,7 @@ void display(){
 
 /*
 	GLfloat AM[16];
-		
+
 for(i=0;i<12;i++)
 	for(j=0;j<dim;j++)
 	{
@@ -364,8 +345,8 @@ for(i=0;i<12;i++)
             for(l=0;l<dim;l++)
 			{
 				if (draw[j][k][l])
-				{	
-					T(100*i,0,0,AM);		
+				{
+					T(100*i,0,0,AM);
 					Mult(AM,mengerTA[j][k][l],AM);
 					Mult(projectionMatrix, AM, trans);
     				glUniformMatrix4fv(glGetUniformLocation(program, "transformation"), 1, GL_TRUE, trans);
@@ -388,12 +369,12 @@ int main(int argc, char *argv[])
 	glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
 	glutInitWindowSize(800,800);
 	glutCreateWindow("Fractal test");
-	glutDisplayFunc(display); 
+	glutDisplayFunc(display);
 	init();
 	glutTimerFunc(20, &OnTimer, 0);
 
     //glutPassiveMotionFunc(mouseMovement);
-    glutKeyboardFunc(keyboardMovement); 
+    glutKeyboardFunc(keyboardMovement);
 
 	glutMainLoop();
 	return 0;
@@ -407,7 +388,7 @@ void drawObject(const CubeList *l, GLfloat* tm, int offset, GLfloat *color){
     for (i=0;i<offset;i++)
     {
         if(tl != NULL)
-            tl = (CubeList *) tl->next;  
+            tl = (CubeList *) tl->next;
     }
 
     //Draw object
@@ -421,7 +402,7 @@ void drawObject(const CubeList *l, GLfloat* tm, int offset, GLfloat *color){
         // VBO for vertex data
     glBindBuffer(GL_ARRAY_BUFFER, c.vertexBufferObjID);
     glBufferData(GL_ARRAY_BUFFER, 8*3*sizeof(GLfloat), c.v, GL_STATIC_DRAW);
-    glVertexAttribPointer(glGetAttribLocation(program, "in_Position"), 3, GL_FLOAT, GL_FALSE, 0, 0); 
+    glVertexAttribPointer(glGetAttribLocation(program, "in_Position"), 3, GL_FLOAT, GL_FALSE, 0, 0);
     glEnableVertexAttribArray(glGetAttribLocation(program, "in_Position"));
 
 
@@ -503,21 +484,21 @@ void uploadCube(Cube *c){
     glGenBuffers(1, &c->vertexBufferObjID);
     glGenBuffers(1, &c->indexBufferObjID);
     glGenBuffers(1, &c->normalBufferObjID);
-    
+
     glBindVertexArray(c->vertexArrayObjID);
 
     // VBO for vertex data
     glBindBuffer(GL_ARRAY_BUFFER, c->vertexBufferObjID);
     glBufferData(GL_ARRAY_BUFFER, 8*3*sizeof(GLfloat), c->v, GL_STATIC_DRAW);
-    glVertexAttribPointer(glGetAttribLocation(program, "in_Position"), 3, GL_FLOAT, GL_FALSE, 0, 0); 
+    glVertexAttribPointer(glGetAttribLocation(program, "in_Position"), 3, GL_FLOAT, GL_FALSE, 0, 0);
     glEnableVertexAttribArray(glGetAttribLocation(program, "in_Position"));
 
-    // VBO for normal data 
+    // VBO for normal data
     glBindBuffer(GL_ARRAY_BUFFER, c->normalBufferObjID);
     glBufferData(GL_ARRAY_BUFFER, 8*3*sizeof(GLfloat), &normals, GL_STATIC_DRAW);
     glVertexAttribPointer(glGetAttribLocation(program, "in_Normal"), 3, GL_FLOAT, GL_FALSE, 0, 0);
     glEnableVertexAttribArray(glGetAttribLocation(program, "in_Normal"));
-   
+
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, c->indexBufferObjID);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, 36*sizeof(GLuint), cubeIndices, GL_STATIC_DRAW);
 }
@@ -555,7 +536,7 @@ int list_remove(CubeList *list, CubeList *node)
 	if(list->next) {
 		list->next=node->next;
         free(node);
-		return 0;		
+		return 0;
 	} else return -1;
 }
 
@@ -615,12 +596,12 @@ void lookAt(GLfloat px, GLfloat py, GLfloat pz,
     t[1] = 0;
     t[2] = 0;
     t[3] = -p.x;
-    
+
     t[4] = 0;
     t[5] = 1;
     t[6] = 0;
     t[7] = -p.y;
-    
+
     t[8] = 0;
     t[9] = 0;
     t[10] = 1;
@@ -667,7 +648,7 @@ void keyboardMovement (unsigned char key, int x, int y) {
         float tempX = (lookAtPosX - cameraPosX)/50;
         float tempY = (lookAtPosY - cameraPosY)/50;
         float tempZ = (lookAtPosZ - cameraPosZ)/50;
-        
+
         cameraPosX += tempX;
         cameraPosY += tempY;
         cameraPosZ += tempZ;
@@ -726,9 +707,9 @@ void keyboardMovement (unsigned char key, int x, int y) {
 }
 /*
 void mouseMovement(int x, int y) {
-    int diffx=x-lastx; 
+    int diffx=x-lastx;
     int diffy=y-lasty;
-    lastx=x; 
+    lastx=x;
     lasty=y;
     xrot += (float) diffy; //set the xrot to xrot with the addition
     yrot += (float) diffx;    //set the xrot to yrot with the addition

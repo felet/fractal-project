@@ -1,13 +1,8 @@
 #version 150
-
-in vec3 color;
-in vec3 colornorm;
-uniform mat3 inColor;
-
-out vec4 out_Color;
 in vec3 normal;
+out vec4 out_Color;
 in vec3 position_to_frag;
-in vec2 TexCoord;
+in vec2 texCoord;
 uniform sampler2D texUnit;
 uniform int setTexture;
 
@@ -18,48 +13,41 @@ uniform bool isDirectional[4];
 
 uniform mat4 totalMatrix;
 uniform vec3 camera_position;
-in vec3 pos;
-vec3 sum = vec3(0.0f);
-vec3 r,v;
-vec3 t;
+
 void main(void)
 {
-        if(setTexture==0){
-            out_Color = texture(texUnit, TexCoord);
-        }
-        else if(setTexture==1){
-            vec3 normalized_normal = normalize(normal);
-
-            vec3 sum = vec3(0.0f);
-            for(int i=0; i<4; i++){
-                if(isDirectional[i]){
-                    r = normalize(2 * normalized_normal * 
-                                    dot(normalize(lightSourcesDirPosArr[i]), normalized_normal) - normalize(lightSourcesDirPosArr[i]));
-                    v = normalize(camera_position - position_to_frag);
-                    sum = sum + lightSourcesColorArr[i] * max(dot(normalize(lightSourcesDirPosArr[i]), normalized_normal), 0.0f);
-                    sum = sum + lightSourcesColorArr[i] * max(pow(dot(r,v), specularExponent[i]),0.0f);
-                }
-                else{
-                    r = normalize(2 * normalized_normal * 
-                                dot(normalize(lightSourcesDirPosArr[i]-position_to_frag), normalized_normal) - 
-                                normalize(lightSourcesDirPosArr[i] - position_to_frag));
-                    v = normalize(camera_position - position_to_frag);
-                    sum = sum + lightSourcesColorArr[i] * max(dot(normalized_normal,normalize(lightSourcesDirPosArr[i]-position_to_frag)), 0.0f);
-                    sum = sum + lightSourcesColorArr[i] * pow(max(dot(r,v),0.0f), specularExponent[i]);
-                }
-            }
-            sum *= texture(texUnit, TexCoord).xyz;
-            sum = normalize(sum);
-            out_Color = vec4(sum, 1.0 );
-        }
-        else if(setTexture==2)
+    if(setTexture==1)
+    {
+        vec3 nNormal = normalize(normal);
+        vec3 eyePosition = vec3(0.0);
+        vec3 eyeDirection = normalize(eyePosition-position_to_frag);
+        vec3 lightDirection[4], reflectedLightDirection[4];
+        vec4 lightColor[4];
+        float diffuseStrength[4], specularStrength[4];
+        for (int i=0;i<4;i++)
         {
-           // out_Color = normalize(vec4(TexCoord.x*0.5, TexCoord.y*0.2, 0.2, 1.0));
-           out_Color = vec4(pos,1.0);
+            if (isDirectional[i])
+                lightDirection[i] = normalize(lightSourcesDirPosArr[i]);
+            else
+                lightDirection[i] = normalize(lightSourcesDirPosArr[i]-position_to_frag);
+
+            reflectedLightDirection[i] = normalize(-reflect(lightDirection[i],nNormal));
+            lightColor[i] = vec4(lightSourcesColorArr[i],1.0);
+            diffuseStrength[i] = max(dot(lightDirection[i],nNormal),0);
+            if (diffuseStrength[i] > 0.0)
+            {
+                specularStrength[i] = pow(max(dot(reflectedLightDirection[i],eyeDirection),0.01),specularExponent[i]);
+            }
         }
-        else if(setTexture==3){
-            out_Color = texture(texUnit, TexCoord);
-        }
-        else
-            out_Color = vec4(0.0,0.0,0.0,1.0);
+        vec4 sum=vec4(0.0);
+        for(int i=0;i<4;i++)
+            sum += (diffuseStrength[i]+specularStrength[i])*lightColor[i];
+        if(setTexture != 1)
+            sum *= texture(texUnit,texCoord);
+        out_Color = sum;
+    }
+    else if (setTexture==0)
+        out_Color = texture(texUnit,texCoord);
+    else
+        out_Color = vec4(0.0);
 }
