@@ -54,7 +54,7 @@ GLfloat specularExponent[] = {10.0, 15.0, 20.0, 10.0};
 GLint isDirectional[] = {0,0,0,1};
 
 GLuint program;
-GLuint *tex1,*tex2; //Texture pointer
+GLuint tex1,tex2; //Texture pointer
 
 unsigned int vertexArrayID;
 unsigned int vertexBufferID;
@@ -140,10 +140,9 @@ CubeList *list_add(CubeList *node, Cube data);
 int list_remove(CubeList *list, CubeList *node);
 Cube list_get_cube(CubeList *list);
 CubeList *list_get_next(CubeList *list);
-void createCube(Cube o, CubeList *list);
 void uploadCube(Cube *c);
 bool list_not_empty(CubeList *list);
-void drawObject(const CubeList *l, GLfloat *tm, int offset, GLfloat *color);
+void drawObject(CubeList *l, GLfloat *tm, int offset, GLfloat *color);
 void init(void)
 {
 	// initialize things related to the camera..
@@ -168,8 +167,8 @@ void init(void)
 
     // Load texture
   //  LoadTGATextureSimple("SkyBox512.tga", &tex);
-    LoadTGATextureSimple("SkyBox512.tga",tex1);
-    LoadTGATextureSimple("awesome.tga",tex2);
+    LoadTGATextureSimple("SkyBox512.tga",&tex1);
+    LoadTGATextureSimple("awesome.tga",&tex2);
     printError("init texture");
 
     glUniform1i(glGetUniformLocation(program, "texUnit"), 0);
@@ -223,7 +222,8 @@ void init(void)
         tl = (CubeList *) tl->next;
     }
     printf("\n vi har : %d stycken kuber\n",listlength);
-	GLfloat length = abs(list_get_cube(mylist).v[7][0] - list_get_cube(mylist).v[6][0]);
+    GLfloat length = list_get_cube(mylist).v[7][0] - list_get_cube(mylist).v[6][0];
+	length = length > 0.0 ? length : -1*length;
 	int j,k,l;
 
 	for(j=0;j<dim;j++)
@@ -303,7 +303,7 @@ void display(){
 
     // Texture upload
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, *tex1);
+    glBindTexture(GL_TEXTURE_2D, tex1);
     DrawModel(skybox);
     printError("Skybox");
 
@@ -312,7 +312,7 @@ void display(){
 
     //Texture upload for cubes
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, *tex2);
+    glBindTexture(GL_TEXTURE_2D, tex2);
     setTexture = 1;
     glUniform1i(glGetUniformLocation(program, "setTexture"), setTexture);
 
@@ -334,9 +334,9 @@ void display(){
         }
     }
 
-/*
-	GLfloat AM[16];
 
+	GLfloat AM[16];
+int i;
 for(i=0;i<12;i++)
 	for(j=0;j<dim;j++)
 	{
@@ -346,7 +346,7 @@ for(i=0;i<12;i++)
 			{
 				if (draw[j][k][l])
 				{
-					T(100*i,0,0,AM);
+					T(27*i,0,0,AM);
 					Mult(AM,mengerTA[j][k][l],AM);
 					Mult(projectionMatrix, AM, trans);
     				glUniformMatrix4fv(glGetUniformLocation(program, "transformation"), 1, GL_TRUE, trans);
@@ -357,7 +357,7 @@ for(i=0;i<12;i++)
             }
         }
     }
-*/
+
     printError("display");
     glutSwapBuffers();
 
@@ -379,7 +379,7 @@ int main(int argc, char *argv[])
 	glutMainLoop();
 	return 0;
 }
-void drawObject(const CubeList *l, GLfloat* tm, int offset, GLfloat *color){
+void drawObject(CubeList *l, GLfloat* tm, int offset, GLfloat *color){
 	CubeList *tl = l;
 	Cube c;
     int i;
@@ -398,71 +398,6 @@ void drawObject(const CubeList *l, GLfloat* tm, int offset, GLfloat *color){
    // glUniform3f(glGetUniformLocation(program, "inColor"), color[0], color[1] ,color[2]);
     glBindVertexArray(c.vertexArrayObjID);    // Select VAO
     glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_BYTE, 0L);
-}
-
-/*
-nya <=> gamla
-5 <=> 0
-7 <=> 1
-3 <=> 2
-1 <=> 3
-4 <=> 4
-6 <=> 5
-2 <=> 6
-0 <=> 7
-- - -
-+ - -
-+ + -
-- + -
-- - +
-+ - +
-+ + +
-- + +
-*/
-void createCube(Cube o, CubeList *list){
-double length = abs(o.v[7][0] - o.v[6][0]);
-double radius = length/6.0;
-
-GLfloat middle[3];
-middle[0] = o.v[7][0] + radius;
-middle[1] = o.v[7][1] + radius;
-middle[2] = o.v[7][2] + radius;
-Cube new;
-
-new.v[0][0] = middle[0] - radius;
-new.v[0][1] = middle[1] - radius;
-new.v[0][2] = middle[2] - radius;
-
-new.v[1][0] = middle[0] + radius;
-new.v[1][1] = middle[1] - radius;
-new.v[1][2] = middle[2] - radius;
-
-new.v[2][0] = middle[0] + radius;
-new.v[2][1] = middle[1] + radius;
-new.v[2][2] = middle[2] - radius;
-
-new.v[3][0] = middle[0] - radius;
-new.v[3][1] = middle[1] + radius;
-new.v[3][2] = middle[2] - radius;
-
-new.v[4][0] = middle[0] - radius;
-new.v[4][1] = middle[1] - radius;
-new.v[4][2] = middle[2] + radius;
-
-new.v[5][0] = middle[0] + radius;
-new.v[5][1] = middle[1] - radius;
-new.v[5][2] = middle[2] + radius;
-
-new.v[6][0] = middle[0] + radius;
-new.v[6][1] = middle[1] + radius;
-new.v[6][2] = middle[2] + radius;
-
-new.v[7][0] = middle[0] - radius;
-new.v[7][1] = middle[1] + radius;
-new.v[7][2] = middle[2] + radius;
-
-uploadCube(&new);
-list_add(list,new);
 }
 
 void uploadCube(Cube *c){
@@ -500,8 +435,7 @@ CubeList *list_get_next(CubeList *list){
 CubeList *list_create(Cube data)
 {
 	CubeList *node;
-    	node = malloc(sizeof(CubeList));
-	//node->cube = (Cube) malloc(sizeof(Cube));
+    	node = (CubeList*) malloc(sizeof(CubeList));
     	node->cube = data;
 	node->next=NULL;
 	return node;
@@ -635,7 +569,7 @@ void keyboardMovement (unsigned char key, int x, int y) {
 	 SetVector(campos.x,campos.y,campos.z,&campos);
 	 }
 	  
-	 else if (key=='d')
+	 if (key=='d')
 	 {
 	 VectorSub(&lookat, &campos, &dir);
 	 Normalize(&dir);
@@ -651,7 +585,13 @@ void keyboardMovement (unsigned char key, int x, int y) {
 	 lookat.x = (float)(campos.x+cos(-ang)*dir.x - sin(-ang)*dir.z);
 	 lookat.z = (float)(campos.z+sin(-ang)*dir.x + cos(-ang)*dir.z);
 	 }
-    else if (key==27)
+
+    if (key=='p')
+        lookat.y += 0.3;
+    else if (key=='l')
+        lookat.y -= 0.3;
+
+    if (key==27)
     {
         exit(0);
     }
