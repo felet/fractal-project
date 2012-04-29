@@ -2,24 +2,21 @@
 
 uniform mat4 projMatrix;
 uniform mat4 camMatrix;
-uniform mat4 tranMatrix;
-uniform mat4 rotMatrix;
-//uniform mat4 totalMatrix;
+uniform mat4 modelMatrix;
 
 // For object
-in  vec3 vert_Position;
-in  vec3 vert_Normal;
-in  vec2 vert_TextCoord;
+in vec3 vert_Position;
+in vec3 vert_Normal;
+in vec2 vert_TextCoord;
 
-out vec3 frag_Normal;
 out vec3 frag_Position;
+out vec3 frag_Normal;
 
 void main(void)
 {
-	gl_Position = projMatrix * camMatrix * tranMatrix * rotMatrix * vec4(vert_Position, 1.0);
+	gl_Position = projMatrix * camMatrix * modelMatrix * vec4(vert_Position, 1.0);
 
-    mat3 normalMatrix = mat3(camMatrix * tranMatrix * rotMatrix);
-    //frag_Normal = normalize(normalMatrix * normalize(vert_Normal));
-    frag_Normal = normalize(vert_Normal);
-    frag_Position = vec3(tranMatrix * rotMatrix * vec4(vert_Position, 1.0));
+    frag_Normal = normalize(mat3(camMatrix * modelMatrix) * normalize(vert_Normal));
+    //frag_Normal = normalize(vert_Normal);
+    frag_Position = vec3(modelMatrix * vec4(vert_Position, 1.0));
 }
