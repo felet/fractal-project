@@ -133,7 +133,7 @@ void printError(const char *functionName)
 }
 
 
-
+/*
 
 
 // Keymap mini manager
@@ -165,3 +165,4 @@ void initKeymapManager()
 	glutKeyboardFunc(keyDown);
 	glutKeyboardUpFunc(keyUp);
 }
+*/
