@@ -1,5 +1,5 @@
 all:
-	g++ -Wall -lGL -lglut -DGL_GLEXT_PROTOTYPES -lfftw3 -lopenal \
+	g++ -Wall -lGL -lglut -DGL_GLEXT_PROTOTYPES \
 		fract.c \
 		GL_utilities.c \
 		VectorUtils2.c \
