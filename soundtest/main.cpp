@@ -77,7 +77,7 @@ void keyDown(unsigned char key, int x, int y)
         mode.background = (mode.background+1) % 2;
     else if (key == '4')
     {   // Change cube color mode
-        mode.cubeColor = (mode.cubeColor+1) % 4;
+        mode.cubeColor = (mode.cubeColor+1) % 5;
         glUniform1i(glGetUniformLocation(program, "cubeColorMode"), mode.cubeColor);
     }
     else if (key == 5)

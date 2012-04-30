@@ -25,6 +25,8 @@ void main(void)
     else if(cubeColorMode == 1)
         out_Color = vec4(vec3(frag_Position.y/10, 2.0-frag_Position.y/10, 0.0), 1.0);
     else if(cubeColorMode == 2)
+        out_Color = vec4(vec3(frag_Position.x/10, frag_Position.y/10, frag_Position.z/10), 1.0);
+    else if(cubeColorMode == 3)
         out_Color = vec4(vec3(amplitude), 1.0);
     else
     {
