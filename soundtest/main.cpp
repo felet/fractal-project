@@ -1,5 +1,6 @@
 #include <unistd.h>
 #include <assert.h>
+#include <iostream>
 
 #include "GL_utilities.h"
 #include "VectorUtils2.h"
@@ -44,7 +45,10 @@ Cube firstCube;
 AudioPlayer music(1024*2);
 
 /* Keyboard actions START */
-int tranMode, cubeColorMode, bgMode = 0;
+struct mode_type
+{
+    int cubeDim, transformation, song, amplitude, cubeColor, background;
+}mode;
 
 char keymap[256];
 
@@ -62,23 +66,30 @@ void keyDown(unsigned char key, int x, int y)
 {
 	keymap[(unsigned int)key] = 1;
 
-    // Change cube mode
-    if (key == 'm')
-        tranMode = (tranMode+1) % 4;
-
-    // Change background mode
-    if (key == 'b')
-        bgMode = (bgMode+1) % 2;
-
-    // Change background mode
-    if (key == 'c')
-    {
-        cubeColorMode = (cubeColorMode+1) % 3;
-        glUniform1i(glGetUniformLocation(program, "cubeColorMode"), cubeColorMode);
+    if (key == '1')
+        // Change transformation mode
+        mode.transformation = (mode.transformation+1) % 4;
+    else if (key == '2')
+        // Change amplitude mode
+        mode.amplitude = (mode.amplitude+1) % 4;
+    else if (key == '3')
+        // Change background mode
+        mode.background = (mode.background+1) % 2;
+    else if (key == '4')
+    {   // Change cube color mode
+        mode.cubeColor = (mode.cubeColor+1) % 4;
+        glUniform1i(glGetUniformLocation(program, "cubeColorMode"), mode.cubeColor);
     }
-
-    // Exit main loop
-    if (key == 'q')
+    else if (key == 5)
+        // Change song
+        mode.song = (mode.background+1) % 3;
+    else if (key == '+')
+        // Increase dimensions on cube mode
+        mode.cubeDim++;
+    else if (key == '-' && mode.cubeDim > 1)
+        // Decrease dimensions on cube mode
+        mode.cubeDim--;
+    else if (key == 'q') // Exit main loop
        throw "END_MAIN_LOOP";
 }
 
@@ -89,6 +100,15 @@ void initKeymapManager()
 
 	glutKeyboardFunc(keyDown);
 	glutKeyboardUpFunc(keyUp);
+    std::cout << std::endl
+        << "1. Change transformation mode" << std::endl
+        << "2. Change amplitude mode" << std::endl
+        << "3. Change background mode" << std::endl
+        << "4. Change cube color mode" << std::endl
+        << "5. Change song TODO" << std::endl
+        << "+. Decrease dimensions on cube mode" << std::endl
+        << "-. Increase dimensions on cube mode" << std::endl
+        << "q. Quit" << std::endl;
 }
 
 /* Keyboard actions END */
@@ -213,8 +233,11 @@ void init(void)
 {
     printError("pre init");
 
-    dumpInfo();
+    // Set mode values
+    mode.transformation = mode.song = mode.amplitude = mode.cubeColor = mode.background = 0;
+    mode.cubeDim = 5;
 
+    dumpInfo();
     // GL inits
     glClearColor(0.3, 0.3, 0.6, 0);
     glEnable(GL_DEPTH_TEST);
@@ -242,12 +265,27 @@ void init(void)
 
 void transformAndDrawCubes()
 {
-    #define DIM 10
+    #define DIM mode.cubeDim
     float amplitude;
     for(int i = 0; i < music.getNumberFrequencies(); i++)
     {
+        switch (mode.amplitude)
+        {
+            case 0:
+                amplitude = 4 * music.getFrequencyBandBetween(i, i) / 1000000;
+                break;
+            case 1:
+                amplitude = log(music.getFrequencyBandBetween(i, i) / music.getNumberFrequencies())/2;
+                break;
+            case 2:
+                amplitude = log2(music.getFrequencyBandBetween(i, i) / music.getNumberFrequencies());
+                break;
+            case 3:
+                amplitude = music.getFrequencyBandBetween(i, i) / 1000000;
+                break;
+        }
 
-        if (tranMode == 0)
+        if (mode.transformation == 0)
         {
             if (i < DIM*DIM)
                 Rz(0.0, rotMatrix);
@@ -264,23 +302,19 @@ void transformAndDrawCubes()
             else
                 break;
 
-            //amplitude = 4 * music.getFrequencyBandBetween(i, i) / 1000000;
-            amplitude = log(music.getFrequencyBandBetween(i, i) / music.getNumberFrequencies())/2;
             T(DIM/2 - i%DIM, 0.5 + amplitude/2 + DIM/2, DIM/2 - int((i%(DIM*DIM))/DIM), tranMatrix);
+
+            T(-0.5 + float(DIM)/2.0 - i%DIM, amplitude/2 + float(DIM)/2.0,-0.5 + float(DIM)/2.0 - int((i%(DIM*DIM))/DIM), tranMatrix);
             Mult(rotMatrix, tranMatrix, modelMatrix);
         }
-        else if (tranMode == 1)
+        else if (mode.transformation == 1)
         {
-            amplitude = music.getFrequencyBandBetween(i, i) / 1000000;
-            amplitude = log2(music.getFrequencyBandBetween(i, i) / music.getNumberFrequencies());
             T(i%DIM+0.5, amplitude/2, i/DIM, tranMatrix);
             Rz(-PI/10*int(i/DIM), rotMatrix);
             Mult(rotMatrix, tranMatrix, modelMatrix);
         }
-        else if (tranMode == 2)
+        else if (mode.transformation == 2)
         {
-            //amplitude = log2(music.getFrequencyBandBetween(i, i) / music.getNumberFrequencies());
-            amplitude = 4 * music.getFrequencyBandBetween(i, i+1) / 1000000;
             T(i, amplitude/2, 0.0, tranMatrix);
             Rz(0, rotMatrix);
             Mult(rotMatrix, tranMatrix, modelMatrix);
@@ -323,15 +357,13 @@ void display(void)
     glUniform3fv(glGetUniformLocation(program, "lightSourcesColorArr"), 4, &lightSourcesColorsArr[0].x);
     glUniform1fv(glGetUniformLocation(program, "specularExponent"), 4, specularExponent);
 
-    printError("2");
     glUniform1iv(glGetUniformLocation(program, "isDirectional"), 4, isDirectional);
-
 
     glUniformMatrix4fv(glGetUniformLocation(program, "projMatrix"), 1, GL_TRUE, projectionMatrix);
     /**************** TODO: MOVE TO INIT? END ****************/
 
     /* Background color START */
-    if (bgMode == 0)
+    if (mode.background == 0)
     {
         float bgColor = music.getFrequencyBandBetween(0, 5) / 10000000 -0.12;
         bgColor = bgColor > 0.0 ? 3*bgColor : 0.0;
@@ -360,7 +392,7 @@ int main(int argc, char *argv[])
 {
     glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
-    glutInitWindowSize(960,600);
+    glutInitWindowSize(900,900);
     glutCreateWindow ("Sound test");
 
     glutDisplayFunc(display);
