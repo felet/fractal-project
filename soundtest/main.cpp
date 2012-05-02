@@ -30,7 +30,7 @@ Point3D lightSourcesColorsArr[] =
 Point3D lightSourcesDirectionsPositions[] =
 {
     {10.0f, 5.0f, 0.0f}, // Red light, positional
-    {0.0f, 5.0f, 10.0f}, // Green light, positional
+    {0.0f, 20.0f, 20.0f}, // Green light, positional
     {-1.0f, 0.0f, 0.0f}, // Blue light along X
     {0.0f, 0.0f, -1.0f}  // White light along Z
 
@@ -257,7 +257,7 @@ void init(void)
     initKeymapManager();
 
     // Load and play music
-    music.loadWave("sound4.wav");
+    music.loadWave("sound2.wav");
     music.play();
 
     printError("init");

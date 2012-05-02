@@ -16,7 +16,8 @@ void main(void)
 {
 	gl_Position = projMatrix * camMatrix * modelMatrix * vec4(vert_Position, 1.0);
 
-    frag_Normal = normalize(mat3(camMatrix) * mat3(modelMatrix) * normalize(vert_Normal));
+    //frag_Normal = normalize(mat3(camMatrix * modelMatrix) * normalize(vert_Normal));
+    frag_Normal = normalize(mat3(projMatrix * modelMatrix) * normalize(vert_Normal));
     //frag_Normal = normalize(vert_Normal);
-    frag_Position = vec3(camMatrix * modelMatrix * vec4(vert_Position, 1.0));
+    frag_Position = vec3(projMatrix * modelMatrix * vec4(vert_Position, 1.0));
 }

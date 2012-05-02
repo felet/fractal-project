@@ -16,6 +16,7 @@ out vec4 out_Color;
 
 void main(void)
 {
+
     if (cubeColorMode == 0)
     {
         vec3 light = vec3(-0.6, 0.6, 0.6);
@@ -25,37 +26,35 @@ void main(void)
     else if(cubeColorMode == 1)
         out_Color = vec4(vec3(frag_Position.y/10, 2.0-frag_Position.y/10, 0.0), 1.0);
     else if(cubeColorMode == 2)
-        out_Color = vec4(vec3(frag_Position.x/10, frag_Position.y/10, frag_Position.z/10), 1.0);
-    else if(cubeColorMode == 3)
         out_Color = vec4(vec3(amplitude), 1.0);
     else
     {
-        vec3 nNormal = normalize(frag_Normal);
-        vec3 eyePosition = vec3(0.0);//TODO remove
-        vec3 eyeDirection = normalize(eyePosition-frag_Position);
-        vec3 lightDirection[4], reflectedLightDirection[4];
-        vec4 lightColor[4];
-        float diffuseStrength[4], specularStrength[4];
-        //for (int i=0;i<4;i++)
-        int i=1;
-        if (true)
-        {
-            if (isDirectional[i])
-                lightDirection[i] = normalize(lightSourcesDirPosArr[i]);
-            else
-                lightDirection[i] = normalize(lightSourcesDirPosArr[i]-frag_Position);
+        vec3 r, v, lightSourcesDirPos;
+        vec3 sum = vec3(0.0f);
 
-            reflectedLightDirection[i] = normalize(-reflect(lightDirection[i],nNormal));
-            lightColor[i] = vec4(lightSourcesColorArr[i],1.0);
-            diffuseStrength[i] = max(dot(lightDirection[i],nNormal),0);
-            if (diffuseStrength[i] > 0.0)
+        //for(int i=0; i < 4; i++)
+        int i = 1;
+        if(true)
+        {
+            lightSourcesDirPos = normalize(lightSourcesDirPosArr[i]);
+            v = normalize(camera_position - frag_Position);
+
+            if(isDirectional[i])
             {
-                specularStrength[i] = pow(max(dot(reflectedLightDirection[i],eyeDirection),0.01),specularExponent[i]);
+                lightSourcesDirPos = normalize(lightSourcesDirPosArr[i]);
+                r = normalize(2 * frag_Normal * dot(lightSourcesDirPos, frag_Normal) - lightSourcesDirPos);
+                sum = sum + lightSourcesColorArr[i] * max(dot(lightSourcesDirPos, frag_Normal), 0.0f);
+                sum = sum + lightSourcesColorArr[i] * pow(max(dot(r, v),0.0f), specularExponent[i]);
+            }
+            else
+            {
+                r = normalize(2 * frag_Normal * dot(normalize(lightSourcesDirPos - frag_Position), frag_Normal) - normalize(lightSourcesDirPos - frag_Position));
+                sum = sum + lightSourcesColorArr[i] * max(dot(frag_Normal, normalize(lightSourcesDirPos - frag_Position)), 0.0f);
+                sum = sum + lightSourcesColorArr[i] * pow(max(dot(r, v), 0.0f), specularExponent[i]);
             }
         }
-        vec4 sum=vec4(0.0);
-        for(int i=0;i<4;i++)
-            sum += (diffuseStrength[i]+specularStrength[i])*lightColor[i];
-        out_Color = sum;
+
+        out_Color = vec4(frag_Normal,1.0);//vec4(sum, 1.0);
     }
+        out_Color = vec4(frag_Normal,1.0);//vec4(sum, 1.0);
 }
