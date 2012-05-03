@@ -8,7 +8,7 @@
 #include "Cube.hpp"
 #include "AudioPlayer.hpp"
 
-const double PI = 3.141592653589793238462;
+#define PI 3.141592653589793238462
 
 // Reference to shader program
 GLuint program;
@@ -132,11 +132,11 @@ GLfloat projectionMatrix[] =
 };
 
 float lookAtPosX = 0;
-float lookAtPosY = 0.5;
+float lookAtPosY = 0;
 float lookAtPosZ = 0;
 
 float cameraPosX = 0;
-float cameraPosY = 0.5;
+float cameraPosY = 0;
 float cameraPosZ = -5;
 float drot = 0;
 
@@ -260,6 +260,16 @@ void init(void)
     music.loadWave("sound2.wav");
     music.play();
 
+    // Load light
+    /**************** TODO: MOVE TO INIT? START ****************/
+    glUniform3fv(glGetUniformLocation(program, "lightSourcesDirPosArr"), 4, &lightSourcesDirectionsPositions[0].x);
+    glUniform3fv(glGetUniformLocation(program, "lightSourcesColorArr"), 4, &lightSourcesColorsArr[0].x);
+    glUniform1fv(glGetUniformLocation(program, "specularExponent"), 4, specularExponent);
+    glUniform1iv(glGetUniformLocation(program, "isDirectional"), 4, isDirectional);
+
+    // Load projection matrix
+    glUniformMatrix4fv(glGetUniformLocation(program, "projMatrix"), 1, GL_TRUE, projectionMatrix);
+    /**************** TODO: MOVE TO INIT? END ****************/
     printError("init");
 }
 
@@ -283,6 +293,9 @@ void transformAndDrawCubes()
             case 3:
                 amplitude = music.getFrequencyBandBetween(i, i) / 1000000;
                 break;
+        }
+        if (amplitude < 0.01){
+            amplitude = 0.01;
         }
 
         if (mode.transformation == 0)
@@ -352,15 +365,6 @@ void display(void)
 
     music.doFFT();
 
-    /**************** TODO: MOVE TO INIT? START ****************/
-    glUniform3fv(glGetUniformLocation(program, "lightSourcesDirPosArr"), 4, &lightSourcesDirectionsPositions[0].x);
-    glUniform3fv(glGetUniformLocation(program, "lightSourcesColorArr"), 4, &lightSourcesColorsArr[0].x);
-    glUniform1fv(glGetUniformLocation(program, "specularExponent"), 4, specularExponent);
-
-    glUniform1iv(glGetUniformLocation(program, "isDirectional"), 4, isDirectional);
-
-    glUniformMatrix4fv(glGetUniformLocation(program, "projMatrix"), 1, GL_TRUE, projectionMatrix);
-    /**************** TODO: MOVE TO INIT? END ****************/
 
     /* Background color START */
     if (mode.background == 0)

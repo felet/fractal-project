@@ -2,7 +2,6 @@
 #define CUBE_HPP
 
 #include "GL_utilities.h"
-#include "loadobj.h"
 
 class Cube
 {
@@ -13,8 +12,11 @@ class Cube
         void draw();
 
     private:
+        #define NUMB_VER 36
         GLuint program;
-        static Model *model;
+        GLuint vertexArrayObjID;
+        static const GLfloat vertices[NUMB_VER*3];
+        static const GLfloat normals[NUMB_VER*3];
 };
 
 #endif
