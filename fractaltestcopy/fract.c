@@ -3,8 +3,8 @@
 #include "LoadTGA.h"
 #include "VectorUtils2.h"
 #include "assert.h"
-#include <math.h>
 #include "Cube.hpp"
+#include <math.h>
 //#include <list>
 
 // camera things
@@ -277,6 +277,7 @@ void display(){
     setTexture = 1;
     glUniform1i(glGetUniformLocation(program, "setTexture"), setTexture);
 
+    // Draw cubes
     for(j=0;j<DIM;j++)
 	{
         for(k=0;k<DIM;k++)
@@ -297,27 +298,28 @@ void display(){
     }
 
 /*
+    //Draw several menger sponge
 	GLfloat AM[16];
-int i;
-for(i=0;i<12;i++)
-	for(j=0;j<DIM;j++)
-	{
-        for(k=0;k<DIM;k++)
-		{
-            for(l=0;l<DIM;l++)
-			{
-				if (draw[j][k][l])
-				{
-					T(27*i,0,0,AM);
-					Mult(AM,mengerTA[j][k][l],AM);
-					Mult(projectionMatrix, AM, trans);
-    				glUniformMatrix4fv(glGetUniformLocation(program, "transformation"), 1, GL_TRUE, trans);
-					Mult(camera, AM,totalMatrix);
-					Mult(projectionMatrix, totalMatrix, totalMatrix);
-				}
+    int i;
+    for(i=0;i<12;i++)
+        for(j=0;j<DIM;j++)
+        {
+            for(k=0;k<DIM;k++)
+            {
+                for(l=0;l<DIM;l++)
+                {
+                    if (draw[j][k][l])
+                    {
+                        T(27*i,0,0,AM);
+                        Mult(AM,mengerTA[j][k][l],AM);
+                        Mult(projectionMatrix, AM, trans);
+                        glUniformMatrix4fv(glGetUniformLocation(program, "transformation"), 1, GL_TRUE, trans);
+                        Mult(camera, AM,totalMatrix);
+                        Mult(projectionMatrix, totalMatrix, totalMatrix);
+                    }
+                }
             }
         }
-    }
 */
     printError("display");
     glutSwapBuffers();
