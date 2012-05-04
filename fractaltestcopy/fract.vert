@@ -10,15 +10,17 @@ out vec2 texCoord;
 out vec3 position_to_frag;
 
 uniform mat4 totalMatrix;
-uniform mat4 transformation;
+uniform mat4 projection;
+uniform mat4 camera;
+uniform mat4 translation;
 uniform int setTexture;
+
 vec4 position;
-out vec3 pos;
-out vec3 colornorm;
+mat4 transformation;
 void main(void)
 {
-    colornorm = in_Normal;
     color = in_Color;
+    transformation = projection*translation;
     if(setTexture == 0)
         texCoord = inTexCoord;
     else
@@ -26,8 +28,10 @@ void main(void)
         position = transformation*vec4(in_Position, 1.0);
         texCoord = normalize(position.xy);
     }
+    position_to_frag = vec3(transformation*vec4(in_Position, 1.0));
+    gl_Position = projection*camera*translation*vec4(in_Position, 1.0);
+    normal = vec3(translation*vec4(in_Normal, 1.0));
 
-    gl_Position = totalMatrix*vec4(in_Position, 1.0);
-	position_to_frag = vec3( transformation*vec4(in_Position, 1.0));
-	normal = vec3( transformation*vec4(in_Normal, 1.0));
+	//position_to_frag = vec3( projection*translation*vec4(in_Position, 1.0));
+	//normal = vec3( transformation*vec4(in_Normal, 1.0));
 }

@@ -1,8 +1,9 @@
 #version 150
 in vec3 normal;
-out vec4 out_Color;
 in vec3 position_to_frag;
 in vec2 texCoord;
+out vec4 out_Color;
+
 uniform sampler2D texUnit;
 uniform int setTexture;
 

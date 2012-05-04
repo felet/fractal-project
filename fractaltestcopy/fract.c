@@ -100,9 +100,9 @@ GLubyte cubeIndices[36] = {0,3,2, 0,2,1,
                            0,1,5, 0,5,4};
 
 Cube cube;
-int spongelvl = 4;
-#define DIM 81 
-GLfloat mengerTA[DIM][DIM][DIM][16]; 
+int spongelvl = 2;
+#define DIM 27 
+GLfloat translationTA[DIM][DIM][DIM][16]; 
 bool draw[DIM][DIM][DIM];
 GLfloat color[DIM][DIM][DIM][3];
 Model *skybox;
@@ -182,10 +182,10 @@ void init(void)
     cube.init(program);
 
     //TODO: ANROPA KLASS
-    GLfloat length = 1; 
+    GLfloat length = 2; 
 	int j,k,l;
 
-    // Calculate transformation matrices for menger sponge
+    // Calculate transformation matrices for translation sponge
 	for(j=0;j<DIM;j++)
 	{
         for(k=0;k<DIM;k++)
@@ -204,7 +204,7 @@ void init(void)
 					}
 				if (draw)
 				{
-					T(length*j,length*k,length*l,mengerTA[j][k][l]);
+					T(length*j,length*k,length*l,translationTA[j][k][l]);
 				}
             }
         }
@@ -252,6 +252,8 @@ void display(){
     glUniform1i(glGetUniformLocation(program, "setTexture"), setTexture);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
+  
+    // Remove translation from the camera matrix
     for (int j = 0; j < 16; j++)
     {
         skyboxMatrix[j] = camera[j];
@@ -259,8 +261,9 @@ void display(){
     skyboxMatrix[3]=0;
     skyboxMatrix[7]=0;
     skyboxMatrix[11]=0;
-    Mult(projectionMatrix, skyboxMatrix, skyboxMatrix);
-    glUniformMatrix4fv(glGetUniformLocation(program, "totalMatrix"), 1, GL_TRUE, skyboxMatrix);
+   
+    glUniformMatrix4fv(glGetUniformLocation(program, "camera"), 1, GL_TRUE, skyboxMatrix);
+    glUniformMatrix4fv(glGetUniformLocation(program, "translation"), 1, GL_TRUE, trans);
 
     // Texture upload
     glActiveTexture(GL_TEXTURE0);
@@ -286,11 +289,16 @@ void display(){
 			{
 				if (draw[j][k][l])
 				{
-					Mult(projectionMatrix, mengerTA[j][k][l], trans);
+                    /*
+					Mult(projectionMatrix, translationTA[j][k][l], trans);
     				glUniformMatrix4fv(glGetUniformLocation(program, "transformation"), 1, GL_TRUE, trans);
-					Mult(camera, mengerTA[j][k][l],totalMatrix);
+					Mult(camera, translationTA[j][k][l],totalMatrix);
 					Mult(projectionMatrix, totalMatrix, totalMatrix);
                     glUniformMatrix4fv(glGetUniformLocation(program, "totalMatrix"), 1, GL_TRUE, totalMatrix);
+                    */
+                    glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_TRUE, projectionMatrix);
+                    glUniformMatrix4fv(glGetUniformLocation(program, "camera"), 1, GL_TRUE, camera);
+                    glUniformMatrix4fv(glGetUniformLocation(program, "translation"), 1, GL_TRUE, translationTA[j][k][l]);
                     cube.draw();
 				}
             }
@@ -298,7 +306,7 @@ void display(){
     }
 
 /*
-    //Draw several menger sponge
+    //Draw several translation sponge
 	GLfloat AM[16];
     int i;
     for(i=0;i<12;i++)
@@ -311,7 +319,7 @@ void display(){
                     if (draw[j][k][l])
                     {
                         T(27*i,0,0,AM);
-                        Mult(AM,mengerTA[j][k][l],AM);
+                        Mult(AM,translationTA[j][k][l],AM);
                         Mult(projectionMatrix, AM, trans);
                         glUniformMatrix4fv(glGetUniformLocation(program, "transformation"), 1, GL_TRUE, trans);
                         Mult(camera, AM,totalMatrix);
