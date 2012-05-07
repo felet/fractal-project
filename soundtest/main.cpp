@@ -16,8 +16,8 @@ GLuint program;
 GLfloat tranMatrix[16], sizeMatrix[16], rotMatrix[16], modelMatrix[16];
 
 /* Light variables START */
-GLfloat specularExponent[] = {10.0, 20.0, 60.0, 5.0};
-GLint isDirectional[] = {0, 0, 1, 1};
+GLfloat specularExponent[] = {10.0, 20.0, 0.01, 5.0};
+GLint isDirectional[] = {0, 0, 0, 0};
 
 Point3D lightSourcesColorsArr[] =
 {
@@ -29,10 +29,10 @@ Point3D lightSourcesColorsArr[] =
 
 Point3D lightSourcesDirectionsPositions[] =
 {
-    {10.0f, 5.0f, 0.0f}, // Red light, positional
-    {0.0f, 20.0f, 20.0f}, // Green light, positional
-    {-1.0f, 0.0f, 0.0f}, // Blue light along X
-    {0.0f, 0.0f, -1.0f}  // White light along Z
+    {10.0f, 5.0f, 0.0f}, // Red light
+    {0.0f, -20.0f, -20.0f}, // Green light
+    {0.0f, 10.0f, 0.0f}, // Blue light
+    {0.0f, 0.0f, -1.0f}  // White light
 
 };
 /* Light variables END */
@@ -67,8 +67,10 @@ void keyDown(unsigned char key, int x, int y)
 	keymap[(unsigned int)key] = 1;
 
     if (key == '1')
-        // Change transformation mode
-        mode.transformation = (mode.transformation+1) % 4;
+    {   // Change transformation mode
+        mode.transformation = (mode.transformation+1) % 3;
+        glUniform1i(glGetUniformLocation(program, "modeTransformation"), mode.transformation);
+    }
     else if (key == '2')
         // Change amplitude mode
         mode.amplitude = (mode.amplitude+1) % 4;
@@ -77,18 +79,22 @@ void keyDown(unsigned char key, int x, int y)
         mode.background = (mode.background+1) % 2;
     else if (key == '4')
     {   // Change cube color mode
-        mode.cubeColor = (mode.cubeColor+1) % 5;
-        glUniform1i(glGetUniformLocation(program, "cubeColorMode"), mode.cubeColor);
+        mode.cubeColor = (mode.cubeColor+1) % 3;
+        glUniform1i(glGetUniformLocation(program, "modeCubeColor"), mode.cubeColor);
     }
     else if (key == 5)
         // Change song
         mode.song = (mode.background+1) % 3;
     else if (key == '+')
-        // Increase dimensions on cube mode
+    {   // Increase dimensions on cube mode
         mode.cubeDim++;
+        glUniform1i(glGetUniformLocation(program, "modeCubeDim"), mode.cubeDim);
+    }
     else if (key == '-' && mode.cubeDim > 1)
-        // Decrease dimensions on cube mode
+    {   // Decrease dimensions on cube mode
         mode.cubeDim--;
+        glUniform1i(glGetUniformLocation(program, "modeCubeDim"), mode.cubeDim);
+    }
     else if (key == 'q') // Exit main loop
        throw "END_MAIN_LOOP";
 }
@@ -237,6 +243,9 @@ void init(void)
     mode.transformation = mode.song = mode.amplitude = mode.cubeColor = mode.background = 0;
     mode.cubeDim = 5;
 
+    glUniform1i(glGetUniformLocation(program, "modeCubeDim"), mode.cubeDim);
+    glUniform1i(glGetUniformLocation(program, "modeCubeColor"), mode.cubeColor);
+
     dumpInfo();
     // GL inits
     glClearColor(0.3, 0.3, 0.6, 0);
@@ -261,7 +270,6 @@ void init(void)
     music.play();
 
     // Load light
-    /**************** TODO: MOVE TO INIT? START ****************/
     glUniform3fv(glGetUniformLocation(program, "lightSourcesDirPosArr"), 4, &lightSourcesDirectionsPositions[0].x);
     glUniform3fv(glGetUniformLocation(program, "lightSourcesColorArr"), 4, &lightSourcesColorsArr[0].x);
     glUniform1fv(glGetUniformLocation(program, "specularExponent"), 4, specularExponent);
@@ -269,7 +277,7 @@ void init(void)
 
     // Load projection matrix
     glUniformMatrix4fv(glGetUniformLocation(program, "projMatrix"), 1, GL_TRUE, projectionMatrix);
-    /**************** TODO: MOVE TO INIT? END ****************/
+
     printError("init");
 }
 
@@ -277,22 +285,18 @@ void transformAndDrawCubes()
 {
     #define DIM mode.cubeDim
     float amplitude;
-    for(int i = 0; i < music.getNumberFrequencies(); i++)
+    for (int i = 0; i < music.getNumberFrequencies(); i++)
     {
         switch (mode.amplitude)
         {
-            case 0:
-                amplitude = 4 * music.getFrequencyBandBetween(i, i) / 1000000;
-                break;
-            case 1:
-                amplitude = log(music.getFrequencyBandBetween(i, i) / music.getNumberFrequencies())/2;
-                break;
-            case 2:
-                amplitude = log2(music.getFrequencyBandBetween(i, i) / music.getNumberFrequencies());
-                break;
-            case 3:
-                amplitude = music.getFrequencyBandBetween(i, i) / 1000000;
-                break;
+            case 0: amplitude = 4 * music.getFrequencyBandBetween(i, i) / 1000000;
+                    break;
+            case 1: amplitude = log(music.getFrequencyBandBetween(i, i) / music.getNumberFrequencies())/2;
+                    break;
+            case 2: amplitude = log2(music.getFrequencyBandBetween(i, i) / music.getNumberFrequencies());
+                    break;
+            case 3: amplitude = music.getFrequencyBandBetween(i, i) / 1000000;
+                    break;
         }
         if (amplitude < 0.01){
             amplitude = 0.01;
@@ -317,6 +321,8 @@ void transformAndDrawCubes()
 
             T(DIM/2 - i%DIM, 0.5 + amplitude/2 + DIM/2, DIM/2 - int((i%(DIM*DIM))/DIM), tranMatrix);
 
+            glUniform1i(glGetUniformLocation(program, "cubeSide"), int(i / (DIM*DIM)));
+
             T(-0.5 + float(DIM)/2.0 - i%DIM, amplitude/2 + float(DIM)/2.0,-0.5 + float(DIM)/2.0 - int((i%(DIM*DIM))/DIM), tranMatrix);
             Mult(rotMatrix, tranMatrix, modelMatrix);
         }
@@ -340,7 +346,8 @@ void transformAndDrawCubes()
 
         Mult(modelMatrix, sizeMatrix, modelMatrix);
         glUniformMatrix4fv(glGetUniformLocation(program, "modelMatrix"), 1, GL_TRUE, modelMatrix);
-        glUniform3f(glGetUniformLocation(program, "amplitude"), amplitude/10, 2.0-amplitude/10, 0*amplitude/10);
+        //glUniform3f(glGetUniformLocation(program, "amplitude"), amplitude/10, 2.0-amplitude/10, 0*amplitude/10);
+        glUniform1fv(glGetUniformLocation(program, "amplitude"), 1, &amplitude);
         firstCube.draw();
     }
 }
