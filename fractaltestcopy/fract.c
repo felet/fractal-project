@@ -178,6 +178,16 @@ void init(void)
     glEnableVertexAttribArray(glGetAttribLocation(program, "in_Color"));
     printError("init colors");
 */
+	// Upload lightsources
+    glUniform3fv(glGetUniformLocation(program, "lightSourcesDirPosArr"), 4, &lightSourcesDirectionsPositions[0].x);
+    glUniform3fv(glGetUniformLocation(program, "lightSourcesColorArr"), 4, &lightSourcesColorsArr[0].x);
+    glUniform1fv(glGetUniformLocation(program, "specularExponent"), 4, specularExponent);
+
+	// Upload camera position (used in specular shading)
+    GLfloat camera_position[] = {(GLfloat)campos.x, (GLfloat)campos.y, (GLfloat)campos.z};
+    glUniform3fv(glGetUniformLocation(program, "camera_position"), 1, camera_position);
+    glUniform1iv(glGetUniformLocation(program, "isDirectional"), 4, isDirectional);
+    glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_TRUE, projectionMatrix);
     // Init Cube
     cube.init(program);
 
@@ -219,7 +229,7 @@ void display(){
     int j,k,l;
 
 	// Transformation matrices
-    GLfloat camera[16], rot[16], trans[16], totalMatrix[16], skyboxMatrix[16];
+    GLfloat camera[16], trans[16], totalMatrix[16], skyboxMatrix[16];
 
     lookAt( campos.x, campos.y, campos.z, // Camera pos
             lookat.x, lookat.y, lookat.z, // Look at pos
@@ -233,19 +243,9 @@ void display(){
     glUniform1i(glGetUniformLocation(program, "texUnit"), 0);
     glUniform1i(glGetUniformLocation(program, "setTexture"), setTexture);*/
 
-	// Upload lightsources
-    glUniform3fv(glGetUniformLocation(program, "lightSourcesDirPosArr"), 4, &lightSourcesDirectionsPositions[0].x);
-    glUniform3fv(glGetUniformLocation(program, "lightSourcesColorArr"), 4, &lightSourcesColorsArr[0].x);
-    glUniform1fv(glGetUniformLocation(program, "specularExponent"), 4, specularExponent);
-
-	// Upload camera position (used in specular shading)
-    GLfloat camera_position[] = {(GLfloat)campos.x, (GLfloat)campos.y, (GLfloat)campos.z};
-    glUniform3fv(glGetUniformLocation(program, "camera_position"), 1, camera_position);
-    glUniform1iv(glGetUniformLocation(program, "isDirectional"), 4, isDirectional);
 
 	// Initialize matrices
     T(0, 0, 0, trans);
-    T(0, 0, 0, rot);
 
     // Skybox
     int setTexture = 0; 
@@ -280,6 +280,7 @@ void display(){
     setTexture = 1;
     glUniform1i(glGetUniformLocation(program, "setTexture"), setTexture);
 
+    glUniformMatrix4fv(glGetUniformLocation(program, "camera"), 1, GL_TRUE, camera);
     // Draw cubes
     for(j=0;j<DIM;j++)
 	{
@@ -296,8 +297,6 @@ void display(){
 					Mult(projectionMatrix, totalMatrix, totalMatrix);
                     glUniformMatrix4fv(glGetUniformLocation(program, "totalMatrix"), 1, GL_TRUE, totalMatrix);
                     */
-                    glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_TRUE, projectionMatrix);
-                    glUniformMatrix4fv(glGetUniformLocation(program, "camera"), 1, GL_TRUE, camera);
                     glUniformMatrix4fv(glGetUniformLocation(program, "translation"), 1, GL_TRUE, translationTA[j][k][l]);
                     cube.draw();
 				}
