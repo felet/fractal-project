@@ -48,10 +48,10 @@ Point3D lightSourcesColorsArr[] = { {1.0f, 0.0f, 0.0f}, // Red light
 Point3D lightSourcesDirectionsPositions[] = { {-235.0f, 250.0f, -200.0f}, // Red light, positional
                                        {-235.0f, 250.0f, 250.0f}, // Green light, positional
                                        {-220.0f, 220.0f, -150.0f}, // Blue light along X
-                                       {0.0f, 0.0f, -1.0f} }; // White light along Z
+                                       {14.0f, -10.0f, -14.0f} }; // White light along Z
 
 GLfloat specularExponent[] = {10.0, 15.0, 20.0, 10.0};
-GLint isDirectional[] = {0,0,0,1};
+GLint isDirectional[] = {0,0,0,0};
 
 GLuint program;
 GLuint tex1,tex2; //Texture pointer
@@ -222,8 +222,9 @@ void init(void)
 }
 
 void display(){
-    // float t = glutGet(GLUT_ELAPSED_TIME)/1000.0f; //Time variable
-
+    float t = glutGet(GLUT_ELAPSED_TIME)/1000.0; //Time variable
+    glUniform1f(glGetUniformLocation(program, "time"), t);
+    glUniform1i(glGetUniformLocation(program, "scale"), 0);
     // Clear the screen
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     int j,k,l;
@@ -282,6 +283,7 @@ void display(){
 
     glUniformMatrix4fv(glGetUniformLocation(program, "camera"), 1, GL_TRUE, camera);
     // Draw cubes
+    glUniform1i(glGetUniformLocation(program, "scale"), 1);
     for(j=0;j<DIM;j++)
 	{
         for(k=0;k<DIM;k++)

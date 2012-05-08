@@ -14,7 +14,7 @@ uniform bool isDirectional[4];
 
 uniform mat4 totalMatrix;
 uniform vec3 camera_position;
-
+uniform float time;
 in vec4 position;
 bool isFilled(int x, int y)
 {
@@ -26,6 +26,8 @@ bool isFilled(int x, int y)
             return false;
         x /= 3; //x and y are decremented to check the next larger square level
         y /= 3;
+
+    // Reduce size of largest square
 	t++;
 	if ( t > 4)
 	break;
@@ -76,7 +78,7 @@ void main(void)
 			vec2 temp = texCoord;
 			temp *= 1000.0;
 			if(isFilled(int(temp.x), int(temp.y)))
-				out_Color = phong()*vec4(1.0);
+				out_Color = phong()*vec4(1.0, 1.0 , sin(time), 1.0);
 			else
 				out_Color = vec4(0.0);
 		}

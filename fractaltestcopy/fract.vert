@@ -14,6 +14,8 @@ uniform mat4 projection;
 uniform mat4 camera;
 uniform mat4 translation;
 uniform int setTexture;
+uniform float time;
+uniform int scale;
 
 vec4 position;
 mat4 transformation;
@@ -28,10 +30,18 @@ void main(void)
         position = transformation*vec4(in_Position, 1.0);
         texCoord = normalize(position.xy);
     }
-    position_to_frag = vec3(transformation*vec4(in_Position, 1.0));
-    gl_Position = projection*camera*translation*vec4(in_Position, 1.0);
-    normal = vec3(translation*vec4(in_Normal, 1.0));
-
+    if(scale == 1)
+    {
+        position_to_frag = vec3(transformation*vec4(in_Position, 1.0));
+        gl_Position = abs(sin(time))*projection*camera*translation*vec4(in_Position, 1.0);
+        normal = vec3(translation*vec4(in_Normal, 1.0));
+    }
+    else
+    {
+        position_to_frag = vec3(transformation*vec4(in_Position, 1.0));
+        gl_Position = projection*camera*translation*vec4(in_Position, 1.0);
+        normal = vec3(translation*vec4(in_Normal, 1.0));
+    }
 	//position_to_frag = vec3( projection*translation*vec4(in_Position, 1.0));
 	//normal = vec3( transformation*vec4(in_Normal, 1.0));
 }
