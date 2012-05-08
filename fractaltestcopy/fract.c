@@ -127,7 +127,7 @@ void keyDown(unsigned char key, int x, int y)
 {
     if (key==27)
     {
-        exit(0);
+        throw "EXIT MAIN LOOP";
     }
     else if (key=='n' && spongelvl < MAX_LEVEL)
     {
@@ -296,31 +296,29 @@ void init(void)
 
 void calcTrans()
 {
-    int j,k,l,m;
-    int i;
     GLfloat length = 1.0;
-	for(j=0;j<dim;j++)
+	for(int j = 0; j < dim; j++)
 	{
-        for(k=0;k<dim;k++)
+        for(int k = 0; k < dim; k++)
 		{
-            for(l=0;l<dim;l++)
+            for(int l = 0; l < dim; l++)
 			{
 				draw[j][k][l] = true;
-				for (int m=0;m<spongelvl;m++)
-					{
-						if (((j/(int)pow(3,m))%3==1 && (k/(int)pow(3,m))%3==1)
-                         || ((l/(int)pow(3,m))%3==1 && (k/(int)pow(3,m))%3==1)
-                         || ((l/(int)pow(3,m))%3==1 && (j/(int)pow(3,m))%3==1))
-						{
-							draw[j][k][l] = false;
-						}
-					}
+				for (int m = 0; m < spongelvl; m++)
+                {
+                    if (((j/(int)pow(3,m))%3==1 && (k/(int)pow(3,m))%3==1)
+                     || ((l/(int)pow(3,m))%3==1 && (k/(int)pow(3,m))%3==1)
+                     || ((l/(int)pow(3,m))%3==1 && (j/(int)pow(3,m))%3==1))
+                    {
+                        draw[j][k][l] = false;
+                    }
+                }
 				if (draw[j][k][l])
 				{
-					T(length*j,length*k,length*l,translationTA[j][k][l]);
+					T(length*j, length*k, length*l, translationTA[j][k][l]);
                     /*
                    // Transform based on time
-                   i = (int) 100.0*sin(time/100.0);
+                   int i = (int) 100.0*sin(time/100.0);
                    if(i!=0)
                         if ( k%i==1 || l%i==1)
                            T(j+time, k+time, 0, translationTA[j][k][l]);
