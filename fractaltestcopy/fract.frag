@@ -26,7 +26,7 @@ bool isFilled(int x, int y)
         if(x%3==1 && y%3==1)
             return false;
         x /= 3; //x and y are decremented to check the next larger square level
-        y /= 3;
+        y /= 3; 
 
     // Reduce size of largest square
 	t++;
