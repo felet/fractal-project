@@ -27,7 +27,7 @@ void main(void)
         texCoord = normalize(position.xy);
     }
 
-    gl_Position = totalMatrix*vec4(in_Position, 1.0);
+    gl_Position = projMatrix * camMatrix * mdlMatrix*vec4(in_Position, 1.0);
 	position_to_frag = vec3( transformation*vec4(in_Position, 1.0));
 	normal = vec3( transformation*vec4(in_Normal, 1.0));
 }
