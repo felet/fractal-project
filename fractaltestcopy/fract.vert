@@ -13,12 +13,14 @@ uniform mat4 totalMatrix;
 uniform mat4 projection;
 uniform mat4 camera;
 uniform mat4 translation;
+uniform mat4 scaling;
 uniform int setTexture;
 uniform float time;
 uniform int scale;
 
 vec4 position;
 mat4 transformation;
+
 void main(void)
 {
     color = in_Color;
@@ -33,7 +35,7 @@ void main(void)
     if(scale == 1)
     {
         position_to_frag = vec3(transformation*vec4(in_Position, 1.0));
-        gl_Position = abs(sin(time))*projection*camera*translation*vec4(in_Position, 1.0);
+        gl_Position = projection*camera*translation*scaling*vec4(in_Position, 1.0);
         normal = vec3(translation*vec4(in_Normal, 1.0));
     }
     else

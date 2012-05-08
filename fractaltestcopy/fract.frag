@@ -22,7 +22,8 @@ bool isFilled(int x, int y)
     while(x>0 || y>0) // when either of these reaches zero the pixel is determined to be on the edge 
                                // at that square level and must be filled
     {
-        if(x%3==1 && y%3==1) //checks if the pixel is in the center for the current square level
+        //if(x%(int(1000*(abs(sin(time/100)))))==1 && y%(int(1000*abs(sin(time/100))))==1) //checks if the pixel is in the center for the current square level
+        if(x%3==1 && y%3==1)
             return false;
         x /= 3; //x and y are decremented to check the next larger square level
         y /= 3;
