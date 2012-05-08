@@ -286,9 +286,6 @@ void init(void)
     // Init Cube
     cube.init(program);
 
-    //TODO: ANROPA KLASS
-  	int j,k,l;
-
     // Calculate transformation matrices for translation sponge
     calcTrans();
 }
