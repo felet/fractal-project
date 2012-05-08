@@ -154,6 +154,11 @@ void keyUp(unsigned char key, int x, int y)
 
 void keyDown(unsigned char key, int x, int y)
 {
+    if (key==27)
+    {
+        exit(0);
+    }
+
 	keymap[(unsigned int)key] = 1;
 }
 
@@ -161,7 +166,7 @@ void initKeymapManager()
 {
 	int i;
 	for (i = 0; i < 256; i++) keymap[i] = 0;
-	
+
 	glutKeyboardFunc(keyDown);
 	glutKeyboardUpFunc(keyUp);
 }
