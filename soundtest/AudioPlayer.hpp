@@ -28,10 +28,8 @@ struct headerDataType
 class AudioPlayer
 {
     public:
-        AudioPlayer(const int);
+        AudioPlayer(const char *, const int);
         ~AudioPlayer();
-        int loadWave(const char *);
-        void freeWave();
         void play();
         int isPlaying();
         void doFFT();
@@ -43,8 +41,11 @@ class AudioPlayer
 
     private:
         headerDataType headerData;
+        const char *waveFile;
         int16_t *samplings;
         bool isLoaded;
+        int loadWave();
+        void freeWave();
 
         ALCdevice *device;
         ALCcontext *context;

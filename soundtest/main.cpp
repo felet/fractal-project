@@ -42,7 +42,7 @@ Point3D lightSourcesDirectionsPositions[] =
 Cube firstCube;
 
 // Create music
-AudioPlayer music(1024*2);
+AudioPlayer *music;
 
 /* Keyboard actions START */
 struct mode_type
@@ -54,7 +54,7 @@ char keymap[256];
 
 char keyIsDown(unsigned char c)
 {
-	return keymap[(unsigned int)c];
+    return keymap[(unsigned int)c];
 }
 
 void keyUp(unsigned char key, int x, int y)
@@ -82,9 +82,21 @@ void keyDown(unsigned char key, int x, int y)
         mode.cubeColor = (mode.cubeColor+1) % 3;
         glUniform1i(glGetUniformLocation(program, "modeCubeColor"), mode.cubeColor);
     }
-    else if (key == 5)
-        // Change song
-        mode.song = (mode.background+1) % 3;
+    else if (key == 32)
+    {   // Change song
+        mode.song = (mode.song+1) % 3;
+        delete music;
+
+        const char *number[] =  {"0", "1", "2", "3"};
+        
+        // Create music
+        std::string fileName = std::string("sound") + std::string(number[mode.song]) + std::string(".wav");
+        std::cout << fileName << std::endl;
+        music = new AudioPlayer(fileName.c_str(), 1024*2);
+
+        // Play music
+        music->play();
+    }
     else if (key == '+')
     {   // Increase dimensions on cube mode
         mode.cubeDim++;
@@ -265,9 +277,11 @@ void init(void)
     // Init keyboard functions
     initKeymapManager();
 
-    // Load and play music
-    music.loadWave("sound2.wav");
-    music.play();
+    // Create music
+    music = new AudioPlayer((char *)"sound2.wav", 1024*2);
+
+    // Play music
+    music->play();
 
     // Load light
     glUniform3fv(glGetUniformLocation(program, "lightSourcesDirPosArr"), 4, &lightSourcesDirectionsPositions[0].x);
@@ -285,17 +299,17 @@ void transformAndDrawCubes()
 {
     #define DIM mode.cubeDim
     float amplitude;
-    for (int i = 0; i < music.getNumberFrequencies(); i++)
+    for (int i = 0; i < music->getNumberFrequencies(); i++)
     {
         switch (mode.amplitude)
         {
-            case 0: amplitude = 4 * music.getFrequencyBandBetween(i, i) / 1000000;
+            case 0: amplitude = 4 * music->getFrequencyBandBetween(i, i) / 1000000;
                     break;
-            case 1: amplitude = log(music.getFrequencyBandBetween(i, i) / music.getNumberFrequencies())/2;
+            case 1: amplitude = log(music->getFrequencyBandBetween(i, i) / music->getNumberFrequencies())/2;
                     break;
-            case 2: amplitude = log2(music.getFrequencyBandBetween(i, i) / music.getNumberFrequencies());
+            case 2: amplitude = log2(music->getFrequencyBandBetween(i, i) / music->getNumberFrequencies());
                     break;
-            case 3: amplitude = music.getFrequencyBandBetween(i, i) / 1000000;
+            case 3: amplitude = music->getFrequencyBandBetween(i, i) / 1000000;
                     break;
         }
         if (amplitude < 0.01){
@@ -370,13 +384,13 @@ void display(void)
     /* Camera Matrix END */
 
 
-    music.doFFT();
+    music->doFFT();
 
 
     /* Background color START */
     if (mode.background == 0)
     {
-        float bgColor = music.getFrequencyBandBetween(0, 5) / 10000000 -0.12;
+        float bgColor = music->getFrequencyBandBetween(0, 5) / 10000000 -0.12;
         bgColor = bgColor > 0.0 ? 3*bgColor : 0.0;
         glClearColor(bgColor, bgColor, bgColor, 0);
     }
@@ -419,8 +433,6 @@ int main(int argc, char *argv[])
     {
         /* Q was pressed, exit main loop */
     }
-
-    music.freeWave();
 
     return EXIT_SUCCESS;
 }

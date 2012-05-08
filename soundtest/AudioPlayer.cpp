@@ -3,8 +3,9 @@
 #include <math.h> // For sqrt()
 #include "AudioPlayer.hpp"
 
-AudioPlayer::AudioPlayer(const int FFTwindowSize)
+AudioPlayer::AudioPlayer(const char *_waveFile, const int FFTwindowSize)
 {
+    waveFile = _waveFile;
     // Create a audio context
     device = alcOpenDevice(NULL);
     context = alcCreateContext(device, NULL);
@@ -36,6 +37,7 @@ AudioPlayer::AudioPlayer(const int FFTwindowSize)
     fftIn = new double[N];
     fftOut = new fftw_complex[ getNumberFrequencies() ];
     fftPlan = fftw_plan_dft_r2c_1d(N, fftIn, fftOut, FFTW_ESTIMATE);
+    loadWave();
 }
 
 AudioPlayer::~AudioPlayer()
@@ -50,10 +52,12 @@ AudioPlayer::~AudioPlayer()
     alDeleteBuffers(1, &buffer);
     alcDestroyContext(context);
     alcCloseDevice(device);
+
+    freeWave();
 }
 
 
-int AudioPlayer::loadWave(const char *waveFile)
+int AudioPlayer::loadWave()
 {
     #define HEADER_SIZE 44
 

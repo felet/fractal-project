@@ -126,7 +126,7 @@ void Cube::init(GLuint programIn)
     glGenBuffers(1, &normalsBufferObjID);
     // VBO for normal data
     glBindBuffer(GL_ARRAY_BUFFER, normalsBufferObjID);
-    glBufferData(GL_ARRAY_BUFFER, NUMB_VER*3*sizeof(GLfloat), &normals, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, NUMB_VER*3*sizeof(GLfloat), normals, GL_STATIC_DRAW);
     glVertexAttribPointer(glGetAttribLocation(program, "vert_Normal"), 3, GL_FLOAT, GL_FALSE, 0, 0);
     glEnableVertexAttribArray(glGetAttribLocation(program, "vert_Normal"));
 
