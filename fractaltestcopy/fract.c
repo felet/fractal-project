@@ -4,11 +4,15 @@
 #include "VectorUtils2.h"
 #include "assert.h"
 #include "Cube.hpp"
+#include "AudioPlayer.hpp"
 #include <math.h>
-//#include <list>
+
+// music
+AudioPlayer *music;
+#define FFT_WINDOW_SIZE 1024*2
 
 // camera things
-Point3D lookat,campos;
+Point3D lookat, campos;
 float drot = 0;
 
 //View frustum
@@ -194,7 +198,7 @@ void init(void)
 
 	// Initialize variables related to the camera
 	SetVector(20.0f,20.0f,20.0f,&lookat);
-	SetVector(-5.0f,20.0f,-10.0f,&campos);
+	SetVector(20.0f,20.0f,-20.0f,&campos);
 
 	// GL inits
 	glClearColor(0.3,0.3,0.3,0);
@@ -262,9 +266,17 @@ void init(void)
             }
         }
     }
+
+    // Create music
+    music = new AudioPlayer((char *)"sound2.wav", 1024);
+
+    // Play music
+    music->play();
 }
 
 void display(){
+
+    music->doFFT();
     float t = glutGet(GLUT_ELAPSED_TIME)/1000.0; //Time variable
     glUniform1f(glGetUniformLocation(program, "time"), t*2);
     glUniform1i(glGetUniformLocation(program, "scale"), 0);
@@ -372,7 +384,6 @@ void display(){
 
 }
 
-
 void OnTimer(int value)
 {
     glutPostRedisplay();
@@ -383,16 +394,23 @@ int main(int argc, char *argv[])
 {
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
-	glutInitWindowSize(800,800);
+	glutInitWindowSize(900, 900);
 	glutCreateWindow("Fractal test");
 	glutDisplayFunc(display);
 	init();
 	glutTimerFunc(20, &OnTimer, 0);
 
-    //glutPassiveMotionFunc(mouseMovement);
+    try
+    {
+        glutMainLoop();
+    }
+    catch(const char* msg)
+    {
+        /* ESC was pressed, exit main loop */
+    }
 
-	glutMainLoop();
-	return 0;
+    delete music;
+	return EXIT_SUCCESS;
 }
 
 
