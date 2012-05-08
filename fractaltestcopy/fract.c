@@ -192,7 +192,7 @@ void init(void)
     cube.init(program);
 
     //TODO: ANROPA KLASS
-    GLfloat length = 2; 
+    GLfloat length = 1; 
 	int j,k,l;
 
     // Calculate transformation matrices for translation sponge
@@ -223,14 +223,14 @@ void init(void)
 
 void display(){
     float t = glutGet(GLUT_ELAPSED_TIME)/1000.0; //Time variable
-    glUniform1f(glGetUniformLocation(program, "time"), t);
+    glUniform1f(glGetUniformLocation(program, "time"), t*2);
     glUniform1i(glGetUniformLocation(program, "scale"), 0);
     // Clear the screen
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     int j,k,l;
 
 	// Transformation matrices
-    GLfloat camera[16], trans[16], totalMatrix[16], skyboxMatrix[16];
+    GLfloat camera[16], trans[16], totalMatrix[16], skyboxMatrix[16], scaling[16];
 
     lookAt( campos.x, campos.y, campos.z, // Camera pos
             lookat.x, lookat.y, lookat.z, // Look at pos
@@ -247,6 +247,7 @@ void display(){
 
 	// Initialize matrices
     T(0, 0, 0, trans);
+    S(sin(t), sin(t), sin(t), scaling);
 
     // Skybox
     int setTexture = 2; 
@@ -284,6 +285,7 @@ void display(){
     glUniformMatrix4fv(glGetUniformLocation(program, "camera"), 1, GL_TRUE, camera);
     // Draw cubes
     glUniform1i(glGetUniformLocation(program, "scale"), 1);
+    glUniformMatrix4fv(glGetUniformLocation(program, "scaling"), 1, GL_TRUE, scaling);
     for(j=0;j<DIM;j++)
 	{
         for(k=0;k<DIM;k++)
