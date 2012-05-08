@@ -140,34 +140,5 @@ void printError(const char *functionName)
 // Important! Uses glutKeyboardFunc/glutKeyboardUpFunc so you can't use them
 // elsewhere or they will conflict.
 
-char keymap[256];
 
-char keyIsDown(unsigned char c)
-{
-	return keymap[(unsigned int)c];
-}
-
-void keyUp(unsigned char key, int x, int y)
-{
-	keymap[(unsigned int)key] = 0;
-}
-
-void keyDown(unsigned char key, int x, int y)
-{
-    if (key==27)
-    {
-        exit(0);
-    }
-
-	keymap[(unsigned int)key] = 1;
-}
-
-void initKeymapManager()
-{
-	int i;
-	for (i = 0; i < 256; i++) keymap[i] = 0;
-
-	glutKeyboardFunc(keyDown);
-	glutKeyboardUpFunc(keyUp);
-}
 

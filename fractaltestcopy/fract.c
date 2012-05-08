@@ -15,6 +15,9 @@ AudioPlayer *music;
 Point3D lookat, campos;
 float drot = 0;
 
+// Current time (ms) 
+float time = 1;
+
 //View frustum
 #define near 1.0
 #define far 900.0
@@ -93,18 +96,67 @@ GLubyte cubeIndices[36] = {0,3,2, 0,2,1,
                            0,1,5, 0,5,4};
 
 Cube cube;
-int spongelvl = 2;
-#define DIM 27 
+#define DIM  81
+#define MAX_LEVEL 4
+int spongelvl = MAX_LEVEL;
+int dim = DIM;
 GLfloat translationTA[DIM][DIM][DIM][16]; 
 bool draw[DIM][DIM][DIM];
 GLfloat color[DIM][DIM][DIM][3];
 Model *skybox;
-
+void calcTrans();
 void lookAt(GLfloat px, GLfloat py, GLfloat pz,
                     GLfloat lx, GLfloat ly, GLfloat lz,
                     GLfloat vx, GLfloat vy, GLfloat vz,
                     GLfloat *m);
 
+char keymap[256];
+
+char keyIsDown(unsigned char c)
+{
+	return keymap[(unsigned int)c];
+}
+
+void keyUp(unsigned char key, int x, int y)
+{
+	keymap[(unsigned int)key] = 0;
+}
+
+
+void keyDown(unsigned char key, int x, int y)
+{
+    if (key==27)
+    {
+        exit(0);
+    }
+    else if (key=='n' && spongelvl < MAX_LEVEL)
+    {
+        spongelvl++;
+        printf("spongelevel: %d \n",spongelvl);
+        dim = pow(3,spongelvl);
+        calcTrans();
+    }
+    else if (key=='m' && spongelvl >= 0)
+    {
+        spongelvl--;
+        printf("spongelevel: %d \n",spongelvl);
+        dim = pow(3,spongelvl);
+        calcTrans();
+    }
+    else if (key=='b')
+    {
+        calcTrans();
+    }
+	keymap[(unsigned int)key] = 1;
+}
+void initKeymapManager()
+{
+	int i;
+	for (i = 0; i < 256; i++) keymap[i] = 0;
+
+	glutKeyboardFunc(keyDown);
+	glutKeyboardUpFunc(keyUp);
+}
 void moveCamera(){
 
     #define SCALE 2
@@ -239,15 +291,22 @@ void init(void)
     cube.init(program);
 
     //TODO: ANROPA KLASS
-    GLfloat length = 1; 
-	int j,k,l;
+  	int j,k,l;
 
     // Calculate transformation matrices for translation sponge
-	for(j=0;j<DIM;j++)
+    calcTrans();
+}
+
+void calcTrans()
+{
+    int j,k,l,m;
+    int i;
+    GLfloat length = 1.0;
+	for(j=0;j<dim;j++)
 	{
-        for(k=0;k<DIM;k++)
+        for(k=0;k<dim;k++)
 		{
-            for(l=0;l<DIM;l++)
+            for(l=0;l<dim;l++)
 			{
 				draw[j][k][l] = true;
 				for (int m=0;m<spongelvl;m++)
@@ -262,7 +321,18 @@ void init(void)
 				if (draw[j][k][l])
 				{
 					T(length*j,length*k,length*l,translationTA[j][k][l]);
-				}
+                    /*
+                   // Transform based on time
+                   i = (int) 100.0*sin(time/100.0);
+                   if(i!=0)
+                        if ( k%i==1 || l%i==1)
+                           T(j+time, k+time, 0, translationTA[j][k][l]);
+                        else if(k%(i+6)==1 || l%(i+6)==1)
+                           T(j-time, k-time, 5, translationTA[j][k][l]);
+                        else if(k%(i+12)==1 || l%(i+12)==1)
+                           T(j+time, k-time, 10, translationTA[j][k][l]);
+                           */
+                }
             }
         }
     }
@@ -277,8 +347,9 @@ void init(void)
 void display(){
 
     music->doFFT();
-    float t = glutGet(GLUT_ELAPSED_TIME)/1000.0; //Time variable
-    glUniform1f(glGetUniformLocation(program, "time"), t*2);
+    time = glutGet(GLUT_ELAPSED_TIME)/1000.0; //Time variable
+    glUniform1f(glGetUniformLocation(program, "time"), time*2);
+
     glUniform1i(glGetUniformLocation(program, "scale"), 0);
     int j,k,l;
     moveCamera();
@@ -300,7 +371,8 @@ void display(){
 
 	// Initialize matrices
     T(0, 0, 0, trans);
-    S(sin(t), sin(t), sin(t), scaling);
+    //S(sin(t), sin(t), sin(t), scaling);
+    T(0,0,0,scaling);
 
     // Skybox
     int setTexture = 2; 
@@ -341,11 +413,11 @@ void display(){
     // Draw cubes
     glUniform1i(glGetUniformLocation(program, "scale"), 1);
     glUniformMatrix4fv(glGetUniformLocation(program, "scaling"), 1, GL_TRUE, scaling);
-    for(j=0;j<DIM;j++)
+    for(j=0;j<dim;j++)
 	{
-        for(k=0;k<DIM;k++)
+        for(k=0;k<dim;k++)
 		{
-            for(l=0;l<DIM;l++)
+            for(l=0;l<dim;l++)
 			{
 				if (draw[j][k][l])
 				{
