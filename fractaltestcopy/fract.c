@@ -248,7 +248,7 @@ void display(){
     T(0, 0, 0, trans);
 
     // Skybox
-    int setTexture = 0; 
+    int setTexture = 2; 
     glUniform1i(glGetUniformLocation(program, "setTexture"), setTexture);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
@@ -303,7 +303,6 @@ void display(){
             }
         }
     }
-
 /*
     //Draw several translation sponge
 	GLfloat AM[16];
@@ -363,9 +362,9 @@ void lookAt(GLfloat px, GLfloat py, GLfloat pz,
     SetVector(vx, vy, vz, &v);
 
     VectorSub(&l, &p, &n);
-    assert(n.x != 0.0 || n.y != 0.0 || n.z != 0.0);
+	assert(n.x != 0.0 || n.y != 0.0 || n.z != 0.0);
 
-    Normalize(&n);
+	Normalize(&n);
     n.x = -n.x;
     n.y = -n.y;
     n.z = -n.z;

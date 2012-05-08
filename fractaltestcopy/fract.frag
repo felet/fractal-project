@@ -15,11 +15,27 @@ uniform bool isDirectional[4];
 uniform mat4 totalMatrix;
 uniform vec3 camera_position;
 
-void main(void)
+in vec4 position;
+bool isFilled(int x, int y)
 {
-    if(setTexture==1)
+	int t=0;
+    while(x>0 || y>0) // when either of these reaches zero the pixel is determined to be on the edge 
+                               // at that square level and must be filled
     {
-        vec3 nNormal = normalize(normal);
+        if(x%3==1 && y%3==1) //checks if the pixel is in the center for the current square level
+            return false;
+        x /= 3; //x and y are decremented to check the next larger square level
+        y /= 3;
+	t++;
+	if ( t > 4)
+	break;
+    }
+    return true; // if all possible square levels are checked and the pixel is not determined 
+                   // to be open it must be filled
+}
+
+vec4 phong(){
+		vec3 nNormal = normalize(normal);
         vec3 eyePosition = vec3(0.0);
         vec3 eyeDirection = normalize(eyePosition-position_to_frag);
         vec3 lightDirection[4], reflectedLightDirection[4];
@@ -45,10 +61,25 @@ void main(void)
             sum += (diffuseStrength[i]+specularStrength[i])*lightColor[i];
         if(setTexture != 1)
             sum *= texture(texUnit,texCoord);
-        out_Color = sum;
+	return sum;
+}
+void main(void)
+{
+    if(setTexture==1)
+    {
+		out_Color = phong();
     }
     else if (setTexture==0)
         out_Color = texture(texUnit,texCoord);
-    else
+    else if (setTexture==2)
+        {
+			vec2 temp = texCoord;
+			temp *= 1000.0;
+			if(isFilled(int(temp.x), int(temp.y)))
+				out_Color = phong()*vec4(1.0);
+			else
+				out_Color = vec4(0.0);
+		}
+	else
         out_Color = vec4(0.0);
 }

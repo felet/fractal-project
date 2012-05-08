@@ -21,7 +21,7 @@ void main(void)
 {
     color = in_Color;
     transformation = projection*translation;
-    if(setTexture == 0)
+    if(setTexture == 0 || setTexture == 2)
         texCoord = inTexCoord;
     else
     {
