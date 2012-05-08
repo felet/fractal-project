@@ -34,9 +34,16 @@ void main(void)
     }
     if(scale == 1)
     {
+        /*
         position_to_frag = vec3(transformation*vec4(in_Position, 1.0));
         gl_Position = projection*camera*translation*scaling*vec4(in_Position, 1.0);
         normal = vec3(translation*vec4(in_Normal, 1.0));
+        */
+        position_to_frag = vec3(transformation*vec4(in_Position, 1.0));
+        position = projection*camera*translation*scaling*vec4(in_Position, 1.0);
+        gl_Position = position;
+        normal = vec3(translation*vec4(in_Normal, 1.0));
+        
     }
     else
     {
