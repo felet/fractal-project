@@ -333,7 +333,7 @@ void calcTrans()
     }
 
     // Create music
-    music = new AudioPlayer((char *)"sound2.wav", 1024);
+    music = new AudioPlayer((char *)"sound0.wav", FFT_WINDOW_SIZE);
 
     // Play music
     music->play();
@@ -342,13 +342,15 @@ void calcTrans()
 void display(){
 
     music->doFFT();
+    GLfloat scale = sin(music->getFrequencyBandBetween(1,1));
     time = glutGet(GLUT_ELAPSED_TIME)/1000.0; //Time variable
     glUniform1f(glGetUniformLocation(program, "time"), time*2);
 
-    glUniform1i(glGetUniformLocation(program, "scale"), 0);
-    int j,k,l;
+    glUniform1i(glGetUniformLocation(program, "modeScale"), 0);
+
     moveCamera();
-	// Transformation matrices
+
+    // Transformation matrices
     GLfloat camera[16], trans[16], skyboxMatrix[16], scaling[16];
 
     lookAt( campos.x, campos.y, campos.z, // Camera pos
@@ -366,8 +368,7 @@ void display(){
 
 	// Initialize matrices
     T(0, 0, 0, trans);
-    //S(sin(t), sin(t), sin(t), scaling);
-    T(0,0,0,scaling);
+    S(scale, scale, scale, scaling);
 
     // Skybox
     int setTexture = 2; 
@@ -406,13 +407,13 @@ void display(){
 
     glUniformMatrix4fv(glGetUniformLocation(program, "camera"), 1, GL_TRUE, camera);
     // Draw cubes
-    glUniform1i(glGetUniformLocation(program, "scale"), 1);
+    glUniform1i(glGetUniformLocation(program, "modeScale"), 1);
     glUniformMatrix4fv(glGetUniformLocation(program, "scaling"), 1, GL_TRUE, scaling);
-    for(j=0;j<dim;j++)
+    for(int j=0;j<dim;j++)
 	{
-        for(k=0;k<dim;k++)
+        for(int k=0;k<dim;k++)
 		{
-            for(l=0;l<dim;l++)
+            for(int l=0;l<dim;l++)
 			{
 				if (draw[j][k][l])
 				{
@@ -426,12 +427,12 @@ void display(){
     //Draw several translation sponge
 	GLfloat AM[16];
     int i;
-    for(i=0;i<12;i++)
-        for(j=0;j<DIM;j++)
+    for(int i=0;i<12;i++)
+        for(int j=0;j<DIM;j++)
         {
-            for(k=0;k<DIM;k++)
+            for(int k=0;k<DIM;k++)
             {
-                for(l=0;l<DIM;l++)
+                for(int l=0;l<DIM;l++)
                 {
                     if (draw[j][k][l])
                     {

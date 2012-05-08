@@ -16,7 +16,7 @@ uniform mat4 translation;
 uniform mat4 scaling;
 uniform int setTexture;
 uniform float time;
-uniform int scale;
+uniform int modeScale;
 
 vec4 position;
 mat4 transformation;
@@ -32,7 +32,7 @@ void main(void)
         position = transformation*vec4(in_Position, 1.0);
         texCoord = normalize(position.xy);
     }
-    if(scale == 1)
+    if(modeScale == 1)
     {
         /*
         position_to_frag = vec3(transformation*vec4(in_Position, 1.0));
