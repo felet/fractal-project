@@ -133,14 +133,14 @@ void keyDown(unsigned char key, int x, int y)
     {
         spongelvl++;
         printf("spongelevel: %d \n",spongelvl);
-        dim = pow(3,spongelvl);
+        dim = int(pow(3, spongelvl));
         calcTrans();
     }
     else if (key=='m' && spongelvl >= 0)
     {
         spongelvl--;
         printf("spongelevel: %d \n",spongelvl);
-        dim = pow(3,spongelvl);
+        dim = int(pow(3,spongelvl));
         calcTrans();
     }
     else if (key=='b')
