@@ -22,7 +22,7 @@ struct mode_type
 Point3D lookat, campos;
 float drot = 0.0;
 
-// elapsed  time (ms) 
+// elapsed  time (ms)
 float etime = 0.0;
 float etimeOld = 0.0;
 float worldClock = 0.0;
@@ -451,14 +451,22 @@ void calcTrans()
 
 GLfloat getBeat()
 {
-    return music->getFrequencyBandBetween(0, 0) / 1000000.0;
+
+    float amp = 0.5 * (music->getFrequencyBandBetween(0, 2) / 10000000.0);
+    //amp = (amp < 0.05) ? 0.05 : 0.5 * amp;
+    std::cout << amp << std::endl;
+
+    return amp;
 }
+#define NUMB_AMP 3
+float preAmp[NUMB_AMP] =  {0};
+int currentAmp = 0;
 
 void display(){
     printError("pre display");
 
     music->doFFT();
-    
+
     if(mode.demo == 0)
         moveCamera();
     else
@@ -471,7 +479,7 @@ void display(){
         SetVector(0,10,5,&goalPoint);
         moveToPoint(&lookat,goalPoint); 
         printPosition();
-    } 
+    }
     // Transformation matrices
     GLfloat camera[16], trans[16], skyboxMatrix[16], scaling[16];
 
@@ -488,9 +496,18 @@ void display(){
     // Light beat
     float lightBeat;
     if (mode.lightBeat == 1)
-        lightBeat = 1.0 - getBeat();
+        lightBeat = getBeat();
     else
         lightBeat = 1.0;
+
+    preAmp[currentAmp] = lightBeat;
+    currentAmp = (currentAmp+1) % NUMB_AMP;
+    lightBeat = 0;
+    for(int i = 0; i < NUMB_AMP; i++)
+    {
+        lightBeat += preAmp[i];
+    }
+    lightBeat /= NUMB_AMP;
     glUniform1f(glGetUniformLocation(program, "lightBeat"), lightBeat);
 
     // Cube Scaling
