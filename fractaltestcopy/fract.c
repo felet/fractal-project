@@ -13,7 +13,10 @@ AudioPlayer *music;
 #define FFT_WINDOW_SIZE 1024
 struct mode_type
 {
-    int  song, lightBeat, cubeScaling, scalingTimeSpeed;
+    int song;
+    int lightBeat;
+    int cubeScaling;
+    int demo;
 }mode;
 // camera things
 Point3D lookat, campos;
@@ -21,7 +24,9 @@ float drot = 0.0;
 
 // elapsed  time (ms) 
 float etime = 0.0;
-
+float etimeOld = 0.0;
+float worldClock = 0.0;
+float clockSpeed = 1.0;
 //View frustum
 #define near 1.0
 #define far 900.0
@@ -41,17 +46,17 @@ GLfloat projectionMatrix[] = {  2.0f*near/(right-left), 0.0f,           (right+l
                                 0.0f, 0.0f,                             -1.0f,                     0.0f };
 
 Point3D lightSourcesColorsArr[] = { {1.0f, 0.0f, 0.0f}, // Red light
-                                 {0.0f, 1.0f, 0.0f}, // Green light
+                                 {0.0f, 0.0f, 0.0f}, // Green light
                                  {0.0f, 0.0f, 1.0f}, // Blue light
                                  {1.0f, 1.0f, 1.0f} }; // White light
 
-Point3D lightSourcesDirectionsPositions[] = { {-235.0f, 250.0f, -200.0f}, // Red light, positional
-                                       {-235.0f, 250.0f, 250.0f}, // Green light, positional
-                                       {-220.0f, 220.0f, -150.0f}, // Blue light along X
-                                       {14.0f, -10.0f, -14.0f} }; // White light along Z
+Point3D lightSourcesDirectionsPositions[] = { {15.0f, 15.0f, 15.0f}, // Red light, positional
+                                       {-300.0f, 50.0f, 500.0f}, // Green light, positional
+                                       {500.0f, 100.0f, 500.0f}, // Blue light along X
+                                       {100.0f, 100.0f, 100.0f} }; // White light along Z
 
-GLfloat specularExponent[] = {10.0, 15.0, 20.0, 10.0};
-GLint isDirectional[] = {0,0,0,0};
+GLfloat specularExponent[] = {5.0, 400.0, 20.0, 10.0};
+GLint isDirectional[] = {0,0,0,1};
 
 GLuint program;
 GLuint tex1,tex2; //Texture pointer
@@ -159,7 +164,7 @@ void keyDown(unsigned char key, int x, int y)
 
     if (key == '2')
     {
-        // Change cube scaling 
+        // Change cube scaling
         mode.cubeScaling = (mode.cubeScaling+1) % 3;
     }
     else if (key == '3')
@@ -184,31 +189,34 @@ void keyDown(unsigned char key, int x, int y)
         // Play music
         music->play();
     }
-    else if (key=='+')
+    else if (key==32)
     {
-        mode.scalingTimeSpeed++;
-    }
-    else if (key=='-' && mode.scalingTimeSpeed > 0)
-    {
-        mode.scalingTimeSpeed--;
+        clockSpeed = 0.0;
     }
     else if (key=='b')
     {
         calcTrans();
     }
-    else if (key=='m' && spongelvl < MAX_LEVEL)
+    else if (key=='n' && spongelvl < MAX_LEVEL)
     {
         spongelvl++;
         printf("spongelevel: %d \n",spongelvl);
         dim = int(pow(3, spongelvl));
         calcTrans();
     }
-    else if (key=='n' && spongelvl >= 0)
+    else if (key=='m' && spongelvl >= 0)
     {
         spongelvl--;
         printf("spongelevel: %d \n",spongelvl);
         dim = int(pow(3,spongelvl));
         calcTrans();
+    }
+    else if (key=='c')
+    {
+        if(mode.demo != 1)
+            mode.demo = 1;
+        else
+            mode.demo = 0;
     }
     else if (key==27)
     {
@@ -233,8 +241,9 @@ void initKeymapManager()
         << "5.\tChange song" << std::endl
         << "+.\tIncrease scaling time speed" << std::endl
         << "-.\tDecrease scaling time speed" << std::endl
-        << "m.\tIncrease recalc sponge" << std::endl
-        << "n.\tDecrease dimensions on cube" << std::endl
+        << "n.\tIncrease recalc sponge" << std::endl
+        << "m.\tDecrease dimensions on cube" << std::endl
+        << "Space.\tPause clock" << std::endl
         << "Esc.\tQuit" << std::endl;
 }
 
@@ -286,6 +295,18 @@ void moveCamera(){
         lookat.y += ROTATION;
     else if (keyIsDown('l'))
         lookat.y -= ROTATION;
+
+    #define TIME_INCREASE_STEP 0.2
+    if (keyIsDown('+'))
+    {
+        clockSpeed += TIME_INCREASE_STEP;
+    }
+    else if (keyIsDown('-'))
+    {
+        clockSpeed -= TIME_INCREASE_STEP;
+        if (clockSpeed < 0.0)
+            clockSpeed = 0.0;
+    }
 }
 
 void lookAt(GLfloat px, GLfloat py, GLfloat pz,
@@ -333,7 +354,7 @@ void init(void)
     mode.song = 0;
     mode.cubeScaling = 0;
     mode.lightBeat = 0;
-    mode.scalingTimeSpeed = 1;
+    clockSpeed = 1.0;
 
 	// Initialize variables related to the camera
 	SetVector(20.0f, 20.0f, -20.0f, &campos);
@@ -409,7 +430,7 @@ void calcTrans()
                 }
 				if (draw[j][k][l])
 				{
-					T(length*j, length*k, length*l, translationTA[j][k][l]);
+					T(length*j+1, length*k+1, length*l+1, translationTA[j][k][l]);
                     /*
                    // Transform based on time
                    int i = (int) 100.0*sin(etime/100.0);
@@ -435,17 +456,22 @@ GLfloat getBeat()
 
 void display(){
     printError("pre display");
-    moveCamera();
 
-    //Move camera automaticly
-    Point3D goalPoint;
-    SetVector(-40,-100,100,&goalPoint);
-    moveToPoint(&campos,goalPoint); 
-    //Move look at position automaticly
-    SetVector(0,10,5,&goalPoint);
-    moveToPoint(&lookat,goalPoint); 
-    printPosition();
+    music->doFFT();
     
+    if(mode.demo == 0)
+        moveCamera();
+    else
+    {
+        //Move camera automaticly
+        Point3D goalPoint;
+        SetVector(-40,-100,100,&goalPoint);
+        moveToPoint(&campos,goalPoint); 
+        //Move look at position automaticly
+        SetVector(0,10,5,&goalPoint);
+        moveToPoint(&lookat,goalPoint); 
+        printPosition();
+    } 
     // Transformation matrices
     GLfloat camera[16], trans[16], skyboxMatrix[16], scaling[16];
 
@@ -454,9 +480,10 @@ void display(){
 			0.0,      1.0,      0.0, // Up vector
             camera);
 
-    music->doFFT();
     etime = glutGet(GLUT_ELAPSED_TIME); //Time variable
     glUniform1f(glGetUniformLocation(program, "time"), etime);
+
+    worldClock += clockSpeed * (etime - etimeOld) / 10000.0;
 
     // Light beat
     float lightBeat;
@@ -471,7 +498,7 @@ void display(){
     if (mode.cubeScaling == 1)
         scale = getBeat();
     else if (mode.cubeScaling == 2)
-        scale = fabs(sin(float(mode.scalingTimeSpeed) * etime / 10000.0));
+        scale = fabs(sin(worldClock));
     else
         scale = 1.0;
     scale = (scale > 1.0) ? 1.0 : scale;
@@ -563,7 +590,8 @@ void display(){
 */
     printError("display");
     glutSwapBuffers();
-
+    //save old etime
+    etimeOld = etime;
 }
 
 void OnTimer(int value)
