@@ -47,14 +47,14 @@ GLfloat projectionMatrix[] = {  2.0f*near/(right-left), 0.0f,           (right+l
 Point3D lightSourcesColorsArr[] = { {1.0f, 0.0f, 0.0f}, // Red light
                                  {0.0f, 0.0f, 0.0f}, // Green light
                                  {0.0f, 0.0f, 1.0f}, // Blue light
-                                 {1.0f, 1.0f, 1.0f} }; // White light
+                                 {0.7f, 0.7f, 0.7f} }; // White light
 
-Point3D lightSourcesDirectionsPositions[] = { {15.0f, 15.0f, 15.0f}, // Red light, positional
-                                       {-300.0f, 50.0f, 500.0f}, // Green light, positional
-                                       {500.0f, 100.0f, 500.0f}, // Blue light along X
-                                       {100.0f, 100.0f, 100.0f} }; // White light along Z
+Point3D lightSourcesDirectionsPositions[] = { {40.0f, 40.0f, 40.0f}, // Red light, positional
+                                       {100.0f, 100.0f, 100.0f}, // Green light, positional
+                                       {100.0f, 100.0f, 100.0f}, // Blue light along X
+                                       {1.0f, 1.0f, 1.0f} }; // White light along Z
 
-GLfloat specularExponent[] = {5.0, 400.0, 20.0, 10.0};
+GLfloat specularExponent[] = {5.0, 4.0, 20.0, 10.0};
 GLint isDirectional[] = {0,0,0,1};
 
 GLuint program;
