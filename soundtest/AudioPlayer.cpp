@@ -187,7 +187,7 @@ float AudioPlayer::getFrequencyBandBetween(const unsigned int start,
         sum += sqrt(fftOut[i][0]*fftOut[i][0] + fftOut[i][1]*fftOut[i][1]);
     }
 
-    return sum / (end - start + 1);
+    return sum;
 }
 
 void AudioPlayer::printElapsedSec()
