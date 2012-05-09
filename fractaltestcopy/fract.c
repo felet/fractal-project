@@ -1,5 +1,6 @@
 #include "loadobj.h"
 #include "GL_utilities.h"
+#include <iostream>
 #include "LoadTGA.h"
 #include "VectorUtils2.h"
 #include "assert.h"
@@ -9,14 +10,17 @@
 
 // music
 AudioPlayer *music;
-#define FFT_WINDOW_SIZE 1024*2
-
+#define FFT_WINDOW_SIZE 1024
+struct mode_type
+{
+    int  song, lightBeat, cubeScaling, scalingTimeSpeed;
+}mode;
 // camera things
 Point3D lookat, campos;
-float drot = 0;
+float drot = 0.0;
 
-// Current time (ms) 
-float time = 1;
+// elapsed  time (ms) 
+float etime = 0.0;
 
 //View frustum
 #define near 1.0
@@ -125,45 +129,96 @@ void keyUp(unsigned char key, int x, int y)
 
 void keyDown(unsigned char key, int x, int y)
 {
-    if (key==27)
+
+    if (key == '2')
     {
-        throw "EXIT MAIN LOOP";
+        // Change cube scaling 
+        mode.cubeScaling = (mode.cubeScaling+1) % 3;
     }
-    else if (key=='n' && spongelvl < MAX_LEVEL)
+    else if (key == '3')
+    {
+        // Change light mode
+        mode.lightBeat= (mode.lightBeat+1) % 2;
+    }
+    else if (key == '5')
+    {   // Change song
+        mode.song = (mode.song+1) % 4;
+        delete music;
+
+        const char *number[] =  {"0", "1", "2", "3"};
+
+        // Create music
+        std::string fileName = std::string("sound")
+            + std::string(number[mode.song])
+            + std::string(".wav");
+        std::cout << "Now playing: " <<  fileName << std::endl;
+        music = new AudioPlayer(fileName.c_str(), FFT_WINDOW_SIZE);
+
+        // Play music
+        music->play();
+    }
+    else if (key=='+')
+    {
+        mode.scalingTimeSpeed++;
+    }
+    else if (key=='-' && mode.scalingTimeSpeed > 0)
+    {
+        mode.scalingTimeSpeed--;
+    }
+    else if (key=='b')
+    {
+        calcTrans();
+    }
+    else if (key=='m' && spongelvl < MAX_LEVEL)
     {
         spongelvl++;
         printf("spongelevel: %d \n",spongelvl);
         dim = int(pow(3, spongelvl));
         calcTrans();
     }
-    else if (key=='m' && spongelvl >= 0)
+    else if (key=='n' && spongelvl >= 0)
     {
         spongelvl--;
         printf("spongelevel: %d \n",spongelvl);
         dim = int(pow(3,spongelvl));
         calcTrans();
     }
-    else if (key=='b')
+    else if (key==27)
     {
-        calcTrans();
+        throw "EXIT MAIN LOOP";
     }
+
+
+
 	keymap[(unsigned int)key] = 1;
 }
+
 void initKeymapManager()
 {
-	int i;
-	for (i = 0; i < 256; i++) keymap[i] = 0;
+	for (int i = 0; i < 256; i++) keymap[i] = 0;
 
 	glutKeyboardFunc(keyDown);
 	glutKeyboardUpFunc(keyUp);
+
+    std::cout << std::endl
+        << "2.\tChange cube scaling" << std::endl
+        << "3.\tChange light beat" << std::endl
+        << "5.\tChange song" << std::endl
+        << "+.\tIncrease scaling time speed" << std::endl
+        << "-.\tDecrease scaling time speed" << std::endl
+        << "m.\tIncrease recalc sponge" << std::endl
+        << "n.\tDecrease dimensions on cube" << std::endl
+        << "Esc.\tQuit" << std::endl;
 }
+
+
 void moveCamera(){
 
-    #define SCALE 2
+    #define SCALE 2.0
     #define ROTATION 0.05
-    float tempX = (lookat.x - campos.x) / SCALE;
-    float tempY = (lookat.y - campos.y) / SCALE;
-    float tempZ = (lookat.z - campos.z) / SCALE;
+    float tempX = (lookat.x - campos.x) * SCALE;
+    float tempY = (lookat.y - campos.y) * SCALE;
+    float tempZ = (lookat.z - campos.z) * SCALE;
 
     if (keyIsDown('w'))
     {
@@ -248,9 +303,15 @@ void init(void)
 {
 	dumpInfo();
 
+    mode.song = 0;
+    mode.cubeScaling = 0;
+    mode.lightBeat = 0;
+    mode.scalingTimeSpeed = 1;
+
 	// Initialize variables related to the camera
-	SetVector(20.0f,20.0f,20.0f,&lookat);
-	SetVector(20.0f,20.0f,-20.0f,&campos);
+	SetVector(20.0f, 20.0f, -20.0f, &campos);
+    drot = 0.0;
+	SetVector(campos.x + sin(drot), 20.0f, campos.z + cos(drot), &lookat);
 
 	// GL inits
 	glClearColor(0.3,0.3,0.3,0);
@@ -292,6 +353,12 @@ void init(void)
 
     // Calculate transformation matrices for translation sponge
     calcTrans();
+
+    // Create music
+    music = new AudioPlayer((char *)"sound0.wav", FFT_WINDOW_SIZE);
+
+    // Play music
+    music->play();
 }
 
 void calcTrans()
@@ -318,35 +385,30 @@ void calcTrans()
 					T(length*j, length*k, length*l, translationTA[j][k][l]);
                     /*
                    // Transform based on time
-                   int i = (int) 100.0*sin(time/100.0);
+                   int i = (int) 100.0*sin(etime/100.0);
                    if(i!=0)
                         if ( k%i==1 || l%i==1)
-                           T(j+time, k+time, 0, translationTA[j][k][l]);
+                           T(j+etime, k+etime, 0, translationTA[j][k][l]);
                         else if(k%(i+6)==1 || l%(i+6)==1)
-                           T(j-time, k-time, 5, translationTA[j][k][l]);
+                           T(j-etime, k-etime, 5, translationTA[j][k][l]);
                         else if(k%(i+12)==1 || l%(i+12)==1)
-                           T(j+time, k-time, 10, translationTA[j][k][l]);
+                           T(j+etime, k-etime, 10, translationTA[j][k][l]);
                            */
                 }
             }
         }
     }
 
-    // Create music
-    music = new AudioPlayer((char *)"sound0.wav", FFT_WINDOW_SIZE);
+}
 
-    // Play music
-    music->play();
+GLfloat getBeat()
+{
+    return music->getFrequencyBandBetween(0, 0) / 1000000.0;
 }
 
 void display(){
 
-    music->doFFT();
-    GLfloat scale = sin(music->getFrequencyBandBetween(1,1));
-    time = glutGet(GLUT_ELAPSED_TIME)/1000.0; //Time variable
-    glUniform1f(glGetUniformLocation(program, "time"), time*2);
-
-    glUniform1i(glGetUniformLocation(program, "modeScale"), 0);
+    printError("pre display");
 
     moveCamera();
 
@@ -355,27 +417,42 @@ void display(){
 
     lookAt( campos.x, campos.y, campos.z, // Camera pos
             lookat.x, lookat.y, lookat.z, // Look at pos
-			0.0, 1.0, 0.0, // Up vector
+			0.0,      1.0,      0.0, // Up vector
             camera);
 
-    printError("pre display");
+    music->doFFT();
+    etime = glutGet(GLUT_ELAPSED_TIME); //Time variable
+    glUniform1f(glGetUniformLocation(program, "time"), etime);
 
-    // Texture upload
-    /*glBindTexture(GL_TEXTURE_2D, tex);
-    glUniform1i(glGetUniformLocation(program, "texUnit"), 0);
-    glUniform1i(glGetUniformLocation(program, "setTexture"), setTexture);*/
+    // Light beat
+    float lightBeat;
+    if (mode.lightBeat == 1)
+        lightBeat = getBeat();
+    else
+        lightBeat = 1.0;
+    glUniform1f(glGetUniformLocation(program, "lightBeat"), lightBeat);
+
+    // Cube Scaling
+    GLfloat scale;
+    if (mode.cubeScaling == 1)
+        scale = getBeat();
+    else if (mode.cubeScaling == 2)
+        scale = fabs(sin(float(mode.scalingTimeSpeed) * etime / 10000.0));
+    else
+        scale = 1.0;
+    scale = (scale > 1.0) ? 1.0 : scale;
+    S(scale, scale, scale, scaling);
 
 
 	// Initialize matrices
     T(0, 0, 0, trans);
-    S(scale, scale, scale, scaling);
 
     // Skybox
-    int setTexture = 2; 
+    int setTexture = 2;
     glUniform1i(glGetUniformLocation(program, "setTexture"), setTexture);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
-  
+
     // Remove translation from the camera matrix
     for (int j = 0; j < 16; j++)
     {
@@ -384,15 +461,18 @@ void display(){
     skyboxMatrix[3]=0;
     skyboxMatrix[7]=0;
     skyboxMatrix[11]=0;
-   
-    // Clear the screen
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     glUniformMatrix4fv(glGetUniformLocation(program, "camera"), 1, GL_TRUE, skyboxMatrix);
     glUniformMatrix4fv(glGetUniformLocation(program, "translation"), 1, GL_TRUE, trans);
+
+    // Clear the screen
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
 
     // Texture upload
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, tex1);
+    glUniform1i(glGetUniformLocation(program, "modeScale"), 0);
     DrawModel(skybox);
     printError("Skybox");
 
