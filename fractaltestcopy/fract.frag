@@ -62,7 +62,7 @@ vec4 phong(){
     }
     vec4 sum=vec4(0.0);
     for(int i=0;i<4;i++)
-        sum += (diffuseStrength[i]+specularStrength[i])*lightColor[i]*lightBeat;
+        sum += (diffuseStrength[i]+specularStrength[i])*lightColor[i];
     if(setTexture != 1)
         sum *= texture(texUnit,texCoord);
 	return sum;
@@ -71,16 +71,17 @@ void main(void)
 {
     if(setTexture==1)
     {
-		out_Color = phong();
+		out_Color = phong()*lightBeat;
     }
     else if (setTexture==0)
         out_Color = texture(texUnit,texCoord);
     else if (setTexture==2)
     {
+        float light = lightBeat*2.0;
         vec2 temp = texCoord;
         temp *= 1000.0;
         if(isFilled(int(temp.x), int(temp.y)))
-            out_Color = phong()*vec4(1.0, cos(time/10000.0) , sin(time/10200.0), 1.0);
+            out_Color = phong()*vec4(1.0, cos(time/10000.0) , sin(time/10200.0), 1.0)*light;
         else
             out_Color = vec4(0.0);
 	}

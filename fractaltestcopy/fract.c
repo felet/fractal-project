@@ -45,18 +45,20 @@ GLfloat projectionMatrix[] = {  2.0f*near/(right-left), 0.0f,           (right+l
                                 0.0f, 0.0f, -(far + near)/(far - near), -2*far*near/(far - near),
                                 0.0f, 0.0f,                             -1.0f,                     0.0f };
 
+
 Point3D lightSourcesColorsArr[] = { {1.0f, 0.0f, 0.0f}, // Red light
                                  {0.0f, 0.0f, 0.0f}, // Green light
-                                 {0.0f, 0.0f, 1.0f}, // Blue light
+                                 {0.0f, 0.0f, 0.4f}, // Blue light
                                  {0.7f, 0.7f, 0.7f} }; // White light
 
-Point3D lightSourcesDirectionsPositions[] = { {40.0f, 40.0f, 40.0f}, // Red light, positional
+Point3D lightSourcesDirectionsPositions[] = { {-40.0f, 40.0f, 40.0f}, // Red light, positional
                                        {100.0f, 100.0f, 100.0f}, // Green light, positional
                                        {100.0f, 100.0f, 100.0f}, // Blue light along X
                                        {1.0f, 1.0f, 1.0f} }; // White light along Z
 
 GLfloat specularExponent[] = {5.0, 4.0, 20.0, 10.0};
-GLint isDirectional[] = {0,0,0,1};
+GLint isDirectional[] = {0,0,1,1};
+
 
 GLuint program;
 GLuint tex1,tex2; //Texture pointer
@@ -362,7 +364,7 @@ void init(void)
 	SetVector(campos.x + sin(drot), 20.0f, campos.z + cos(drot), &lookat);
 
 	// GL inits
-	glClearColor(0.3,0.3,0.3,0);
+	glClearColor(0.0, 0.0, 0.0, 1.0);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     //glFrontFace(GL_CW);
@@ -400,6 +402,7 @@ void init(void)
     cube.init(program);
 
     // Calculate transformation matrices for translation sponge
+    dim = int(pow(3, MAX_LEVEL-1));
     calcTrans();
 
     // Create music
@@ -451,16 +454,13 @@ void calcTrans()
 
 GLfloat getBeat()
 {
-
-    float amp = 0.5 * (music->getFrequencyBandBetween(0, 2) / 10000000.0);
-    //amp = (amp < 0.05) ? 0.05 : 0.5 * amp;
-    std::cout << amp << std::endl;
-
-    return amp;
+    return 0.5 * (music->getFrequencyBandBetween(0, 2) / 10000000.0);
 }
-#define NUMB_AMP 3
+
+#define NUMB_AMP 2
 float preAmp[NUMB_AMP] =  {0};
 int currentAmp = 0;
+float oldLightBeat = 0;
 
 void display(){
     printError("pre display");
@@ -496,7 +496,10 @@ void display(){
     // Light beat
     float lightBeat;
     if (mode.lightBeat == 1)
+    {
         lightBeat = getBeat();
+        lightBeat = (lightBeat < 0.05) ? 0.05 : lightBeat;
+    }
     else
         lightBeat = 1.0;
 
@@ -508,12 +511,16 @@ void display(){
         lightBeat += preAmp[i];
     }
     lightBeat /= NUMB_AMP;
+    oldLightBeat -= 0.05;
+    lightBeat = (lightBeat > oldLightBeat ? lightBeat : oldLightBeat);
+    std::cout << lightBeat << std::endl;
     glUniform1f(glGetUniformLocation(program, "lightBeat"), lightBeat);
+    oldLightBeat = lightBeat;
 
     // Cube Scaling
     GLfloat scale;
     if (mode.cubeScaling == 1)
-        scale = getBeat();
+        scale = 1.0 - getBeat();
     else if (mode.cubeScaling == 2)
         scale = fabs(sin(worldClock));
     else
