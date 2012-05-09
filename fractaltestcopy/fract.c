@@ -23,7 +23,7 @@ struct mode_type
 Point3D lookat, campos;
 float drot = 0.0;
 
-// elapsed  time (ms) 
+// elapsed  time (ms)
 float etime = 0.0;
 float etimeOld = 0.0;
 float worldClock = 0.0;
@@ -46,18 +46,20 @@ GLfloat projectionMatrix[] = {  2.0f*near/(right-left), 0.0f,           (right+l
                                 0.0f, 0.0f, -(far + near)/(far - near), -2*far*near/(far - near),
                                 0.0f, 0.0f,                             -1.0f,                     0.0f };
 
+
 Point3D lightSourcesColorsArr[] = { {1.0f, 0.0f, 0.0f}, // Red light
                                  {0.0f, 0.0f, 0.0f}, // Green light
-                                 {0.0f, 0.0f, 1.0f}, // Blue light
-                                 {1.0f, 1.0f, 1.0f} }; // White light
+                                 {0.0f, 0.0f, 0.4f}, // Blue light
+                                 {0.7f, 0.7f, 0.7f} }; // White light
 
-Point3D lightSourcesDirectionsPositions[] = { {15.0f, 15.0f, 15.0f}, // Red light, positional
-                                       {-300.0f, 50.0f, 500.0f}, // Green light, positional
-                                       {500.0f, 100.0f, 500.0f}, // Blue light along X
-                                       {100.0f, 100.0f, 100.0f} }; // White light along Z
+Point3D lightSourcesDirectionsPositions[] = { {-40.0f, 40.0f, 40.0f}, // Red light, positional
+                                       {100.0f, 100.0f, 100.0f}, // Green light, positional
+                                       {100.0f, 100.0f, 100.0f}, // Blue light along X
+                                       {1.0f, 1.0f, 1.0f} }; // White light along Z
 
-GLfloat specularExponent[] = {5.0, 400.0, 20.0, 10.0};
-GLint isDirectional[] = {0,0,0,1};
+GLfloat specularExponent[] = {5.0, 4.0, 20.0, 10.0};
+GLint isDirectional[] = {0,0,1,1};
+
 
 GLuint program;
 GLuint tex1,tex2; //Texture pointer
@@ -148,6 +150,40 @@ void lookAt(GLfloat px, GLfloat py, GLfloat pz,
                     GLfloat *m);
 
 char keymap[256];
+
+#define size 5 // size = antal fasta punkter kameran skall passera = control points
+#define numPoints 10 // numpoints = antal punkter som genereras mellan två control points
+
+int step[2]={0,0};
+Point3D path[size][numPoints];
+Point3D lpath[size][numPoints];
+void createMovement(Point3D cp[size], Point3D ret[size][numPoints])
+{
+	int i,j;
+	Point3D dist;
+	for(i=0;i<size;i++)
+	{
+		if (i!=size-1)
+		{	
+			VectorSub(&cp[i+1],&cp[i],&dist);
+			for (j=0;j<numPoints;j++)
+			{
+				ret[i][j].x = cp[i].x + j*(dist.x/numPoints);
+				ret[i][j].y = cp[i].y + j*(dist.y/numPoints);
+				ret[i][j].z = cp[i].z + j*(dist.z/numPoints);					 
+			}
+		}
+		else
+		{
+			for (j=0;j<numPoints;j++)
+			{
+				ret[i][j].x = cp[i].x;
+				ret[i][j].y = cp[i].y;
+				ret[i][j].z = cp[i].z;					 
+			}
+		}
+	}
+}
 
 char keyIsDown(unsigned char c)
 {
@@ -359,7 +395,21 @@ void lookAt(GLfloat px, GLfloat py, GLfloat pz,
 void init(void)
 {
 	dumpInfo();
-
+	// TODO set asdf to control points
+	Point3D asdf[size];
+	SetVector(0.0,0.0,0.0,&asdf[0]);
+	SetVector(2.5,3.0,1.0,&asdf[1]);
+	SetVector(4.7,1.0,2.0,&asdf[2]);
+	SetVector(5.3,4.0,4.0,&asdf[3]);
+	SetVector(8.9,8.0,7.0,&asdf[4]);
+	Point3D asdf2[size];
+	SetVector(0.1,0.0,0.0,&asdf[0]);
+	SetVector(2.6,3.0,1.0,&asdf[1]);
+	SetVector(4.8,1.0,2.0,&asdf[2]);
+	SetVector(5.9,4.0,4.0,&asdf[3]);
+	SetVector(8.3,8.0,7.0,&asdf[4]);
+	createMovement(asdf,path);
+	createMovement(asdf2,lpath);
     mode.song = 0;
     mode.cubeScaling = 0;
     mode.lightBeat = 0;
@@ -371,7 +421,7 @@ void init(void)
 	SetVector(campos.x + sin(drot), 20.0f, campos.z + 10*cos(drot), &lookat);
 
 	// GL inits
-	glClearColor(0.3,0.3,0.3,0);
+	glClearColor(0.0, 0.0, 0.0, 1.0);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     //glFrontFace(GL_CW);
@@ -409,6 +459,7 @@ void init(void)
     cube.init(program);
 
     // Calculate transformation matrices for translation sponge
+    dim = int(pow(3, MAX_LEVEL-1));
     calcTrans();
 
     // Create music
@@ -460,41 +511,36 @@ void calcTrans()
 
 GLfloat getBeat()
 {
-    return music->getFrequencyBandBetween(0, 0) / 1000000.0;
+    return 0.5 * (music->getFrequencyBandBetween(0, 2) / 10000000.0);
 }
 
-void demoRoute(){
-    Point3D goalPoint;
-    switch(mode.reachedPos)
-    {
-        case 0 :
-        mode.reachedPos = 1;
-        //Move camera
-        SetVector(15.2,31.2,-38.3,&goalPoint);
-        moveToPoint(&campos,goalPoint); 
-        //Move look at position
-        mode.reachedPos = 1;
-        SetVector(15.2,30.9,-38.2,&goalPoint);
-        moveToPoint2(&lookat,goalPoint); 
-        break;
-        case 1 :
-        printPosition();
-        default :
-        break;
-    }
-
-}
+#define NUMB_AMP 2
+float preAmp[NUMB_AMP] =  {0};
+int currentAmp = 0;
+float oldLightBeat = 0;
 
 void display(){
     printError("pre display");
 
     music->doFFT();
-    
+
     if(mode.demo == 0)
         moveCamera();
     else
     {
-        demoRoute();
+        if (step[1] != size)
+		{
+		campos = path[step[1]][step[0]];
+		lookat = lpath[step[1]][step[0]];
+	//printf("step: %d,%d x: %f y: %f z: %f \n",step[1],step[0],path[step[1]][step[0]].x,path[step[1]][step[0]].y,path[step[1]][step[0]].z);
+		step[0]++;
+		if (step[0]==numPoints)
+		{
+			step[1]++;
+			step[0]=0;
+		//printf("---\n");
+		}
+    }
     } 
     // Transformation matrices
     GLfloat camera[16], trans[16], skyboxMatrix[16], scaling[16];
@@ -512,15 +558,31 @@ void display(){
     // Light beat
     float lightBeat;
     if (mode.lightBeat == 1)
+    {
         lightBeat = getBeat();
+        lightBeat = (lightBeat < 0.05) ? 0.05 : lightBeat;
+    }
     else
         lightBeat = 1.0;
+
+    preAmp[currentAmp] = lightBeat;
+    currentAmp = (currentAmp+1) % NUMB_AMP;
+    lightBeat = 0;
+    for(int i = 0; i < NUMB_AMP; i++)
+    {
+        lightBeat += preAmp[i];
+    }
+    lightBeat /= NUMB_AMP;
+    oldLightBeat -= 0.05;
+    lightBeat = (lightBeat > oldLightBeat ? lightBeat : oldLightBeat);
+    std::cout << lightBeat << std::endl;
     glUniform1f(glGetUniformLocation(program, "lightBeat"), lightBeat);
+    oldLightBeat = lightBeat;
 
     // Cube Scaling
     GLfloat scale;
     if (mode.cubeScaling == 1)
-        scale = getBeat();
+        scale = 1.0 - getBeat();
     else if (mode.cubeScaling == 2)
         scale = fabs(sin(worldClock));
     else
