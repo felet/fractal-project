@@ -41,7 +41,7 @@ Point3D lightSourcesDirectionsPositions[] =
 // Create cube
 Cube firstCube;
 
-// Create music
+// music
 AudioPlayer *music;
 
 /* Keyboard actions START */
@@ -434,6 +434,7 @@ int main(int argc, char *argv[])
         /* Q was pressed, exit main loop */
     }
 
+    delete music;
     return EXIT_SUCCESS;
 }
 
