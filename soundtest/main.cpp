@@ -82,9 +82,9 @@ void keyDown(unsigned char key, int x, int y)
         mode.cubeColor = (mode.cubeColor+1) % 3;
         glUniform1i(glGetUniformLocation(program, "modeCubeColor"), mode.cubeColor);
     }
-    else if (key == 32)
+    else if (key == '5')
     {   // Change song
-        mode.song = (mode.song+1) % 3;
+        mode.song = (mode.song+1) % 4;
         delete music;
 
         const char *number[] =  {"0", "1", "2", "3"};
@@ -107,7 +107,7 @@ void keyDown(unsigned char key, int x, int y)
         mode.cubeDim--;
         glUniform1i(glGetUniformLocation(program, "modeCubeDim"), mode.cubeDim);
     }
-    else if (key == 'q') // Exit main loop
+    else if (key == 27) // Exit main loop
        throw "END_MAIN_LOOP";
 }
 
@@ -119,21 +119,21 @@ void initKeymapManager()
 	glutKeyboardFunc(keyDown);
 	glutKeyboardUpFunc(keyUp);
     std::cout << std::endl
-        << "1. Change transformation mode" << std::endl
-        << "2. Change amplitude mode" << std::endl
-        << "3. Change background mode" << std::endl
-        << "4. Change cube color mode" << std::endl
-        << "5. Change song TODO" << std::endl
-        << "+. Decrease dimensions on cube mode" << std::endl
-        << "-. Increase dimensions on cube mode" << std::endl
-        << "q. Quit" << std::endl;
+        << "1.\tChange transformation mode" << std::endl
+        << "2.\tChange amplitude mode" << std::endl
+        << "3.\tChange background mode" << std::endl
+        << "4.\tChange cube color mode" << std::endl
+        << "5.\tChange song TODO" << std::endl
+        << "+.\tDecrease dimensions on cube mode" << std::endl
+        << "-.\tIncrease dimensions on cube mode" << std::endl
+        << "Esc.\tQuit" << std::endl;
 }
 
 /* Keyboard actions END */
 
 /* Camera START */
 #define near 1.0
-#define far 90.0
+#define far 900.0
 #define right 0.5
 #define left -0.5
 #define top 0.5
@@ -278,7 +278,7 @@ void init(void)
     initKeymapManager();
 
     // Create music
-    music = new AudioPlayer((char *)"sound2.wav", 1024*2);
+    music = new AudioPlayer((char *)"sound0.wav", 1024*2);
 
     // Play music
     music->play();
