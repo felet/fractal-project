@@ -165,7 +165,7 @@ void lookAt(GLfloat px, GLfloat py, GLfloat pz,
 
 char keymap[256];
 
-#define size 22 // size = antal fasta punkter kameran skall passera = control points
+#define size 26 // size = antal fasta punkter kameran skall passera = control points
 #define numPoints 30 // numpoints = antal punkter som genereras mellan två control points
 
 int step[2]={0,0};
@@ -419,6 +419,7 @@ void lookAt(GLfloat px, GLfloat py, GLfloat pz,
 void init(void)
 {
 	dumpInfo();
+
 	Point3D asdf[size];
     SetVector(18.719795, 13.199673, -80.321762, &asdf[0]); 
     SetVector(17.320351, 13.199806, -52.356796, &asdf[1]); 
@@ -437,6 +438,16 @@ void init(void)
     SetVector(-55.963264, 13.200455, 15.016264, &asdf[14]); 
     SetVector(-55.963264, 13.200455, 15.016264, &asdf[15]); 
     SetVector(-55.963264, 13.200455, 15.016264, &asdf[16]); 
+    SetVector(-55.963264, 13.200455, 15.016264, &asdf[17]); 
+    SetVector(-55.963264, 13.200455, 15.016264, &asdf[18]);
+    SetVector(15.963264, 13.200455, 45.016264, &asdf[19]);
+	SetVector(55.963264, 13.200455, 15.016264, &asdf[20]);
+	SetVector(55.963264, 13.200455, -45.016264, &asdf[21]);
+	SetVector(15, 15, -5, &asdf[22]);
+	SetVector(15, 15, 14, &asdf[23]);
+	SetVector(15, 15, -50, &asdf[24]);
+	SetVector(40, 40, -80, &asdf[25]);
+
 	Point3D asdf2[size];
     SetVector(18.669815, 13.199677, -79.323013, &asdf2[0]); 
     SetVector(17.270370, 13.199811, -51.358047, &asdf2[1]); 
@@ -455,18 +466,18 @@ void init(void)
     SetVector(-55.211983, 13.200459, 15.676247, &asdf2[14]); 
     SetVector(-54.977814, 13.200459, 15.186232, &asdf2[15]); 
     SetVector(-54.970551, 13.200459, 15.136767, &asdf2[16]); 
-
     SetVector(-54.270551, 13.200459, 15.10, &asdf2[17]); 
     SetVector(15, 15, 15, &asdf2[18]); 
     SetVector(15, 15, 15, &asdf2[19]); 
     SetVector(15, 15, 15, &asdf2[20]); 
     SetVector(15, 15, 15, &asdf2[21]); 
-//----------------
-    SetVector(-55.963264, 13.200455, 15.016264, &asdf[17]); 
-    SetVector(-55.963264, 13.200455, 15.016264, &asdf[18]);
-    SetVector(15.963264, 13.200455, 45.016264, &asdf[19]);
-	SetVector(55.963264, 13.200455, 15.016264, &asdf[20]);
-	SetVector(55.963264, 13.200455, -45.016264, &asdf[21]);
+    SetVector(15, 15, 15, &asdf2[22]); 
+    SetVector(15, 15, 15, &asdf2[23]); 
+    SetVector(15, 15, 15, &asdf2[23]); 
+    SetVector(40, 40, 40, &asdf2[25]); 
+    
+    mode.demo = 1;
+
 	createMovement(asdf,path);
 	createMovement(asdf2,lpath);
     mode.song = 0;
@@ -601,11 +612,17 @@ void display(){
             }
             if(step[1]==16)
             {
-                mode.cubeScaling = 2;
+                mode.lightBeat = 1;
             }
-            if(step[1]==18)
+            if(step[1]==20)
             {
-                //mode.bgPulse = 1;
+                mode.cubeScaling = 1;
+            }
+            if(step[1]==25)
+            {
+               spongelvl = 4;
+               dim = int(pow(3, spongelvl));
+               calcTrans();
             }
         }
         else
@@ -629,6 +646,7 @@ void display(){
     {
         s++;
         printtime = floor(etime/1000);
+        printf("Tid: %d \n",s);
         if(mode.print ==1){
         printPosition2(s);
         printLookAt2(s);
