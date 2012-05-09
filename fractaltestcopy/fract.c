@@ -8,6 +8,9 @@
 #include "AudioPlayer.hpp"
 #include <math.h>
 
+// Step for print
+int s = 0;
+
 // music
 AudioPlayer *music;
 #define FFT_WINDOW_SIZE 1024
@@ -18,6 +21,7 @@ struct mode_type
     int cubeScaling;
     int demo;
     int reachedPos;
+    int print;
 }mode;
 // camera things
 Point3D lookat, campos;
@@ -28,6 +32,7 @@ float etime = 0.0;
 float etimeOld = 0.0;
 float worldClock = 0.0;
 float clockSpeed = 1.0;
+float printtime;
 //View frustum
 #define near 1.0
 #define far 900.0
@@ -137,12 +142,21 @@ GLfloat stepLength = 0.2;
 Point3D lookatPoint;
 
 void printPosition(){
-    printf("Position: %f, %f, %f \n", campos.x, campos.y, campos.z);
+    printf("SetVector(%f, %f, %f, &asdf) \n", campos.x, campos.y, campos.z);
+}
+
+void printPosition2(int s){
+    printf("SetVector(%f, %f, %f, &asdf[%d]); \n", campos.x, campos.y, campos.z, s);
 }
 
 void printLookAt(){
-    printf("Look-at position: %f, %f, %f \n", lookat.x, lookat.y, lookat.z);
+    printf("L %f, %f, %f \n", lookat.x, lookat.y, lookat.z);
 }
+
+void printLookAt2(int s){
+    printf("SetVector(%f, %f, %f, &asdf2[%d]); \n", lookat.x, lookat.y, lookat.z, s);
+}
+
 void calcTrans();
 void lookAt(GLfloat px, GLfloat py, GLfloat pz,
                     GLfloat lx, GLfloat ly, GLfloat lz,
@@ -151,8 +165,8 @@ void lookAt(GLfloat px, GLfloat py, GLfloat pz,
 
 char keymap[256];
 
-#define size 5 // size = antal fasta punkter kameran skall passera = control points
-#define numPoints 10 // numpoints = antal punkter som genereras mellan två control points
+#define size 22 // size = antal fasta punkter kameran skall passera = control points
+#define numPoints 30 // numpoints = antal punkter som genereras mellan två control points
 
 int step[2]={0,0};
 Point3D path[size][numPoints];
@@ -250,6 +264,7 @@ void keyDown(unsigned char key, int x, int y)
     }
     else if (key=='c')
     {
+        s=0;
         if(mode.demo != 1)
             mode.demo = 1;
         else
@@ -257,11 +272,20 @@ void keyDown(unsigned char key, int x, int y)
     }
     else if(key=='z')
     {
-        printPosition();
+        printPosition2(s);
+        s++;
     }
     else if(key=='x')
     {
-        printLookAt();
+        printLookAt2(s);
+        s++;
+    }
+     else if (key=='i')
+    {
+        if(mode.print != 1)
+            mode.print = 1;
+        else
+            mode.print = 0;
     }
     else if (key==27)
     {
@@ -395,19 +419,54 @@ void lookAt(GLfloat px, GLfloat py, GLfloat pz,
 void init(void)
 {
 	dumpInfo();
-	// TODO set asdf to control points
 	Point3D asdf[size];
-	SetVector(0.0,0.0,0.0,&asdf[0]);
-	SetVector(2.5,3.0,1.0,&asdf[1]);
-	SetVector(4.7,1.0,2.0,&asdf[2]);
-	SetVector(5.3,4.0,4.0,&asdf[3]);
-	SetVector(8.9,8.0,7.0,&asdf[4]);
+    SetVector(18.719795, 13.199673, -80.321762, &asdf[0]); 
+    SetVector(17.320351, 13.199806, -52.356796, &asdf[1]); 
+    SetVector(16.120827, 13.199921, -28.386826, &asdf[2]); 
+    SetVector(15.221184, 13.200006, -10.409348, &asdf[3]); 
+    SetVector(14.321541, 13.200092, 7.568130, &asdf[4]); 
+    SetVector(14.021660, 13.200121, 13.560623, &asdf[5]); 
+    SetVector(14.021660, 13.200121, 13.560623, &asdf[6]); 
+    SetVector(14.021660, 13.200121, 13.560623, &asdf[7]); 
+    SetVector(14.021660, 13.200121, 13.560623, &asdf[8]); 
+    SetVector(-7.973577, 13.200226, 14.018110, &asdf[9]); 
+    SetVector(-35.967537, 13.200359, 14.600367, &asdf[10]); 
+    SetVector(-55.963264, 13.200455, 15.016264, &asdf[11]); 
+    SetVector(-55.963264, 13.200455, 15.016264, &asdf[12]); 
+    SetVector(-55.963264, 13.200455, 15.016264, &asdf[13]); 
+    SetVector(-55.963264, 13.200455, 15.016264, &asdf[14]); 
+    SetVector(-55.963264, 13.200455, 15.016264, &asdf[15]); 
+    SetVector(-55.963264, 13.200455, 15.016264, &asdf[16]); 
 	Point3D asdf2[size];
-	SetVector(0.1,0.0,0.0,&asdf[0]);
-	SetVector(2.6,3.0,1.0,&asdf[1]);
-	SetVector(4.8,1.0,2.0,&asdf[2]);
-	SetVector(5.9,4.0,4.0,&asdf[3]);
-	SetVector(8.3,8.0,7.0,&asdf[4]);
+    SetVector(18.669815, 13.199677, -79.323013, &asdf2[0]); 
+    SetVector(17.270370, 13.199811, -51.358047, &asdf2[1]); 
+    SetVector(16.070847, 13.199925, -27.388077, &asdf2[2]); 
+    SetVector(15.171204, 13.200011, -9.410599, &asdf2[3]); 
+    SetVector(14.271561, 13.200097, 8.566879, &asdf2[4]); 
+    SetVector(13.726140, 13.200126, 14.515960, &asdf2[5]); 
+    SetVector(13.340021, 13.200126, 14.292312, &asdf2[6]); 
+    SetVector(13.108896, 13.200126, 13.969110, &asdf2[7]); 
+    SetVector(13.021876, 13.200126, 13.581418, &asdf2[8]); 
+    SetVector(-8.973361, 13.200231, 14.038905, &asdf2[9]); 
+    SetVector(-36.967323, 13.200364, 14.621161, &asdf2[10]); 
+    SetVector(-56.926823, 13.200459, 15.283763, &asdf2[11]); 
+    SetVector(-56.527908, 13.200459, 15.841599, &asdf2[12]); 
+    SetVector(-55.813828, 13.200459, 16.005035, &asdf2[13]); 
+    SetVector(-55.211983, 13.200459, 15.676247, &asdf2[14]); 
+    SetVector(-54.977814, 13.200459, 15.186232, &asdf2[15]); 
+    SetVector(-54.970551, 13.200459, 15.136767, &asdf2[16]); 
+
+    SetVector(-54.270551, 13.200459, 15.10, &asdf2[17]); 
+    SetVector(15, 15, 15, &asdf2[18]); 
+    SetVector(15, 15, 15, &asdf2[19]); 
+    SetVector(15, 15, 15, &asdf2[20]); 
+    SetVector(15, 15, 15, &asdf2[21]); 
+//----------------
+    SetVector(-55.963264, 13.200455, 15.016264, &asdf[17]); 
+    SetVector(-55.963264, 13.200455, 15.016264, &asdf[18]);
+    SetVector(15.963264, 13.200455, 45.016264, &asdf[19]);
+	SetVector(55.963264, 13.200455, 15.016264, &asdf[20]);
+	SetVector(55.963264, 13.200455, -45.016264, &asdf[21]);
 	createMovement(asdf,path);
 	createMovement(asdf2,lpath);
     mode.song = 0;
@@ -418,7 +477,7 @@ void init(void)
 	// Initialize variables related to the camera
 	SetVector(20.0f, 20.0f, -20.0f, &campos);
     drot = 0.0;
-	SetVector(campos.x + sin(drot), 20.0f, campos.z + 10*cos(drot), &lookat);
+	SetVector(campos.x + sin(drot), 20.0f, campos.z + cos(drot), &lookat);
 
 	// GL inits
 	glClearColor(0.0, 0.0, 0.0, 1.0);
@@ -540,7 +599,18 @@ void display(){
 			step[0]=0;
 		//printf("---\n");
 		}
-    }
+        if(step[1]==16)
+        {
+            mode.cubeScaling = 2;
+        }
+        if(step[1]==18)
+            //mode.bgPulse = 1;
+        }
+        else
+        {
+           mode.cubeScaling = 2; 
+        }
+        
     } 
     // Transformation matrices
     GLfloat camera[16], trans[16], skyboxMatrix[16], scaling[16];
@@ -552,6 +622,16 @@ void display(){
 
     etime = glutGet(GLUT_ELAPSED_TIME); //Time variable
     glUniform1f(glGetUniformLocation(program, "time"), etime);
+
+    if(printtime < floor(etime/1000))
+    {
+        s++;
+        printtime = floor(etime/1000);
+        if(mode.print ==1){
+        printPosition2(s);
+        printLookAt2(s);
+        }
+    }
 
     worldClock += clockSpeed * (etime - etimeOld) / 10000.0;
 
@@ -575,7 +655,7 @@ void display(){
     lightBeat /= NUMB_AMP;
     oldLightBeat -= 0.05;
     lightBeat = (lightBeat > oldLightBeat ? lightBeat : oldLightBeat);
-    std::cout << lightBeat << std::endl;
+    //TODO:std::cout << lightBeat << std::endl;
     glUniform1f(glGetUniformLocation(program, "lightBeat"), lightBeat);
     oldLightBeat = lightBeat;
 
