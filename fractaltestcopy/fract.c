@@ -108,6 +108,33 @@ GLfloat translationTA[DIM][DIM][DIM][16];
 bool draw[DIM][DIM][DIM];
 GLfloat color[DIM][DIM][DIM][3];
 Model *skybox;
+
+
+GLfloat lengthVector(Point3D v)
+{
+    return (GLfloat) sqrt(DotProduct(&v,&v));  
+}
+
+GLfloat max(GLfloat a, GLfloat b){
+    return (a<b)?b:a;
+}
+void moveToPoint(Point3D *pos, Point3D gpos){
+    Point3D moveSpeed, distance;
+    SetVector(1.0, 1.0, 1.0, &moveSpeed);
+    SetVector(gpos.x - pos->x, gpos.y - pos->y, gpos.z - pos->z, &distance);
+    GLfloat distLength = lengthVector(distance);
+    Normalize(&distance);
+    GLfloat maxStep = max(moveSpeed.x, moveSpeed.y);
+    maxStep = max(maxStep, moveSpeed.z);
+    if(distLength >= maxStep)
+        SetVector(pos->x + distance.x*moveSpeed.x, pos->y + distance.y*moveSpeed.y, pos->z + distance.z*moveSpeed.z, pos);
+    
+}
+
+void printPosition(){
+    printf("Position(x,y,z): %f, %f, %f \n", campos.x, campos.y, campos.z);
+}
+
 void calcTrans();
 void lookAt(GLfloat px, GLfloat py, GLfloat pz,
                     GLfloat lx, GLfloat ly, GLfloat lz,
@@ -407,11 +434,18 @@ GLfloat getBeat()
 }
 
 void display(){
-
     printError("pre display");
-
     moveCamera();
 
+    //Move camera automaticly
+    Point3D goalPoint;
+    SetVector(-40,-100,100,&goalPoint);
+    moveToPoint(&campos,goalPoint); 
+    //Move look at position automaticly
+    SetVector(0,10,5,&goalPoint);
+    moveToPoint(&lookat,goalPoint); 
+    printPosition();
+    
     // Transformation matrices
     GLfloat camera[16], trans[16], skyboxMatrix[16], scaling[16];
 
