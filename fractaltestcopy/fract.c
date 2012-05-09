@@ -589,22 +589,24 @@ void display(){
     {
         if (step[1] != size)
 		{
-		campos = path[step[1]][step[0]];
-		lookat = lpath[step[1]][step[0]];
-	//printf("step: %d,%d x: %f y: %f z: %f \n",step[1],step[0],path[step[1]][step[0]].x,path[step[1]][step[0]].y,path[step[1]][step[0]].z);
-		step[0]++;
-		if (step[0]==numPoints)
-		{
-			step[1]++;
-			step[0]=0;
-		//printf("---\n");
-		}
-        if(step[1]==16)
-        {
-            mode.cubeScaling = 2;
-        }
-        if(step[1]==18)
-            //mode.bgPulse = 1;
+            campos = path[step[1]][step[0]];
+            lookat = lpath[step[1]][step[0]];
+        //printf("step: %d,%d x: %f y: %f z: %f \n",step[1],step[0],path[step[1]][step[0]].x,path[step[1]][step[0]].y,path[step[1]][step[0]].z);
+            step[0]++;
+            if (step[0]==numPoints)
+            {
+                step[1]++;
+                step[0]=0;
+            //printf("---\n");
+            }
+            if(step[1]==16)
+            {
+                mode.cubeScaling = 2;
+            }
+            if(step[1]==18)
+            {
+                //mode.bgPulse = 1;
+            }
         }
         else
         {

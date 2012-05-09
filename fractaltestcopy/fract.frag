@@ -81,7 +81,7 @@ void main(void)
         vec2 temp = texCoord;
         temp *= 1000.0;
         if(isFilled(int(temp.x), int(temp.y)))
-            out_Color = phong()*vec4(1.0, cos(time/10000.0) , sin(time/10200.0), 1.0)*light;
+            out_Color = phong()*vec4(1.0, cos(time/1000.0) , sin(time/1200.0), 1.0)*light;
         else
             out_Color = vec4(0.0);
 	}
