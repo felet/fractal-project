@@ -15,6 +15,7 @@ uniform bool isDirectional[4];
 uniform mat4 totalMatrix;
 uniform vec3 camera_position;
 uniform float time;
+uniform float lightBeat;
 in vec4 position;
 bool isFilled(int x, int y)
 {
@@ -61,7 +62,7 @@ vec4 phong(){
         }
         vec4 sum=vec4(0.0);
         for(int i=0;i<4;i++)
-            sum += (diffuseStrength[i]+specularStrength[i])*lightColor[i];
+            sum += (diffuseStrength[i]+specularStrength[i])*lightColor[i]*lightBeat;
         if(setTexture != 1)
             sum *= texture(texUnit,texCoord);
 	return sum;
@@ -79,7 +80,7 @@ void main(void)
 			vec2 temp = texCoord;
 			temp *= 1000.0;
 			if(isFilled(int(temp.x), int(temp.y)))
-				out_Color = phong()*vec4(1.0, 1.0 , sin(time), 1.0);
+				out_Color = phong()*vec4(1.0, cos(time/1000.0) , sin(time/800.0), 1.0);
 			else
 				out_Color = vec4(0.0);
 		}
