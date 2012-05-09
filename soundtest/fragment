@@ -94,13 +94,13 @@ void main(void)
             }
             else
                 tmp = frag_Position.y;
+            tmp = tmp - float(modeCubeDim/2);
         }
         else if (modeCubeColor == 1)
             tmp = amplitude;
 
         if (modeTransformation == 0)
         {
-            tmp = tmp - float(modeCubeDim/2);
             out_Color = phong()*lightBeat*vec4(tmp/5.0, 2.0-tmp/5.0, 0.0, 1.0);
         }
         else

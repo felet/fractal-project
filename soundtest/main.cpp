@@ -414,9 +414,13 @@ void display(void)
     }
     else if (mode.beat == 1)
     {
-        lightBeat = music->getFrequencyBandBetween(0, 5) / 10000000/6 -0.12;
-        if (lightBeat < 0.2)
-            lightBeat = 0.2;
+        if (mode.phong == 0)
+            lightBeat = music->getFrequencyBandBetween(0, 5) / 10000000/6 -0.12;
+        else
+            lightBeat = music->getFrequencyBandBetween(0, 5) / 10000000 -0.12;
+
+        if (lightBeat < 0.1)
+            lightBeat = 0.1;
         glClearColor(0.0, 0.0, 0.0, 0.0);
     }
     else
