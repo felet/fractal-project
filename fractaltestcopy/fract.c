@@ -22,6 +22,7 @@ struct mode_type
     int demo;
     int reachedPos;
     int print;
+    int wait;
 }mode;
 // camera things
 Point3D lookat, campos;
@@ -445,8 +446,11 @@ void init(void)
 	SetVector(55.963264, 13.200455, -45.016264, &asdf[21]);
 	SetVector(15, 15, -5, &asdf[22]);
 	SetVector(15, 15, 14, &asdf[23]);
-	SetVector(15, 15, -50, &asdf[24]);
-	SetVector(40, 40, -80, &asdf[25]);
+	SetVector(15, 15, -15, &asdf[24]);
+	SetVector(15, 15, -30, &asdf[25]);
+	SetVector(15, 15, -45, &asdf[26]);
+	SetVector(40, 40, -80, &asdf[27]);
+	SetVector(40, 40, -100, &asdf[28]);
 
 	Point3D asdf2[size];
     SetVector(18.669815, 13.199677, -79.323013, &asdf2[0]); 
@@ -473,8 +477,11 @@ void init(void)
     SetVector(15, 15, 15, &asdf2[21]); 
     SetVector(15, 15, 15, &asdf2[22]); 
     SetVector(15, 15, 15, &asdf2[23]); 
-    SetVector(15, 15, 15, &asdf2[23]); 
+    SetVector(15, 15, 15, &asdf2[24]); 
     SetVector(40, 40, 40, &asdf2[25]); 
+    SetVector(40, 40, 40, &asdf2[26]); 
+    SetVector(40, 40, 40, &asdf2[27]); 
+    SetVector(40, 40, 40, &asdf2[28]); 
     
     mode.demo = 1;
 
@@ -596,7 +603,7 @@ void display(){
 
     if(mode.demo == 0)
         moveCamera();
-    else
+    else if(mode.wait==0)
     {
         if (step[1] != size)
 		{
@@ -613,10 +620,10 @@ void display(){
             if(step[1]==16)
             {
                 mode.lightBeat = 1;
+                mode.wait=1;
             }
             if(step[1]==20)
             {
-                mode.cubeScaling = 1;
             }
             if(step[1]==25)
             {
@@ -630,7 +637,19 @@ void display(){
            mode.cubeScaling = 2; 
         }
         
-    } 
+    }
+    else if(s <= 30)
+    {
+        mode.wait=0;
+        mode.lightBeat=0;
+    }
+    else if(s <= 50)
+    {
+        mode.cubeScaling = 1;
+    }
+    else
+        mode.cubeScaling = 2;
+
     // Transformation matrices
     GLfloat camera[16], trans[16], skyboxMatrix[16], scaling[16];
 
@@ -646,7 +665,6 @@ void display(){
     {
         s++;
         printtime = floor(etime/1000);
-        printf("Tid: %d \n",s);
         if(mode.print ==1){
         printPosition2(s);
         printLookAt2(s);
