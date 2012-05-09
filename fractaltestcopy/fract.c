@@ -17,6 +17,7 @@ struct mode_type
     int lightBeat;
     int cubeScaling;
     int demo;
+    int reachedPos;
 }mode;
 // camera things
 Point3D lookat, campos;
@@ -117,29 +118,29 @@ Model *skybox;
 
 GLfloat lengthVector(Point3D v)
 {
-    return (GLfloat) sqrt(DotProduct(&v,&v));  
+    return (GLfloat) sqrt((float)DotProduct(&v,&v));  
+}
+
+GLfloat sign(GLfloat a)
+{
+    return (a>0) ? 1:-1;
 }
 
 GLfloat max(GLfloat a, GLfloat b){
     return (a<b)?b:a;
 }
-void moveToPoint(Point3D *pos, Point3D gpos){
-    Point3D moveSpeed, distance;
-    SetVector(1.0, 1.0, 1.0, &moveSpeed);
-    SetVector(gpos.x - pos->x, gpos.y - pos->y, gpos.z - pos->z, &distance);
-    GLfloat distLength = lengthVector(distance);
-    Normalize(&distance);
-    GLfloat maxStep = max(moveSpeed.x, moveSpeed.y);
-    maxStep = max(maxStep, moveSpeed.z);
-    if(distLength >= maxStep)
-        SetVector(pos->x + distance.x*moveSpeed.x, pos->y + distance.y*moveSpeed.y, pos->z + distance.z*moveSpeed.z, pos);
-    
-}
+
+//Steplength for moveToPoint
+GLfloat stepLength = 0.2;
+Point3D lookatPoint;
 
 void printPosition(){
-    printf("Position(x,y,z): %f, %f, %f \n", campos.x, campos.y, campos.z);
+    printf("Position: %f, %f, %f \n", campos.x, campos.y, campos.z);
 }
 
+void printLookAt(){
+    printf("Look-at position: %f, %f, %f \n", lookat.x, lookat.y, lookat.z);
+}
 void calcTrans();
 void lookAt(GLfloat px, GLfloat py, GLfloat pz,
                     GLfloat lx, GLfloat ly, GLfloat lz,
@@ -217,6 +218,14 @@ void keyDown(unsigned char key, int x, int y)
             mode.demo = 1;
         else
             mode.demo = 0;
+    }
+    else if(key=='z')
+    {
+        printPosition();
+    }
+    else if(key=='x')
+    {
+        printLookAt();
     }
     else if (key==27)
     {
@@ -359,7 +368,7 @@ void init(void)
 	// Initialize variables related to the camera
 	SetVector(20.0f, 20.0f, -20.0f, &campos);
     drot = 0.0;
-	SetVector(campos.x + sin(drot), 20.0f, campos.z + cos(drot), &lookat);
+	SetVector(campos.x + sin(drot), 20.0f, campos.z + 10*cos(drot), &lookat);
 
 	// GL inits
 	glClearColor(0.3,0.3,0.3,0);
@@ -454,6 +463,28 @@ GLfloat getBeat()
     return music->getFrequencyBandBetween(0, 0) / 1000000.0;
 }
 
+void demoRoute(){
+    Point3D goalPoint;
+    switch(mode.reachedPos)
+    {
+        case 0 :
+        mode.reachedPos = 1;
+        //Move camera
+        SetVector(15.2,31.2,-38.3,&goalPoint);
+        moveToPoint(&campos,goalPoint); 
+        //Move look at position
+        mode.reachedPos = 1;
+        SetVector(15.2,30.9,-38.2,&goalPoint);
+        moveToPoint2(&lookat,goalPoint); 
+        break;
+        case 1 :
+        printPosition();
+        default :
+        break;
+    }
+
+}
+
 void display(){
     printError("pre display");
 
@@ -463,14 +494,7 @@ void display(){
         moveCamera();
     else
     {
-        //Move camera automaticly
-        Point3D goalPoint;
-        SetVector(-40,-100,100,&goalPoint);
-        moveToPoint(&campos,goalPoint); 
-        //Move look at position automaticly
-        SetVector(0,10,5,&goalPoint);
-        moveToPoint(&lookat,goalPoint); 
-        printPosition();
+        demoRoute();
     } 
     // Transformation matrices
     GLfloat camera[16], trans[16], skyboxMatrix[16], scaling[16];
