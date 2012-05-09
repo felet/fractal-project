@@ -41,17 +41,17 @@ GLfloat projectionMatrix[] = {  2.0f*near/(right-left), 0.0f,           (right+l
                                 0.0f, 0.0f,                             -1.0f,                     0.0f };
 
 Point3D lightSourcesColorsArr[] = { {1.0f, 0.0f, 0.0f}, // Red light
-                                 {0.0f, 1.0f, 0.0f}, // Green light
+                                 {0.0f, 0.0f, 0.0f}, // Green light
                                  {0.0f, 0.0f, 1.0f}, // Blue light
                                  {1.0f, 1.0f, 1.0f} }; // White light
 
-Point3D lightSourcesDirectionsPositions[] = { {-235.0f, 250.0f, -200.0f}, // Red light, positional
-                                       {-235.0f, 250.0f, 250.0f}, // Green light, positional
-                                       {-220.0f, 220.0f, -150.0f}, // Blue light along X
-                                       {14.0f, -10.0f, -14.0f} }; // White light along Z
+Point3D lightSourcesDirectionsPositions[] = { {15.0f, 15.0f, 15.0f}, // Red light, positional
+                                       {-300.0f, 50.0f, 500.0f}, // Green light, positional
+                                       {500.0f, 100.0f, 500.0f}, // Blue light along X
+                                       {100.0f, 100.0f, 100.0f} }; // White light along Z
 
-GLfloat specularExponent[] = {10.0, 15.0, 20.0, 10.0};
-GLint isDirectional[] = {0,0,0,0};
+GLfloat specularExponent[] = {5.0, 400.0, 20.0, 10.0};
+GLint isDirectional[] = {0,0,0,1};
 
 GLuint program;
 GLuint tex1,tex2; //Texture pointer
@@ -382,7 +382,7 @@ void calcTrans()
                 }
 				if (draw[j][k][l])
 				{
-					T(length*j, length*k, length*l, translationTA[j][k][l]);
+					T(length*j+1, length*k+1, length*l+1, translationTA[j][k][l]);
                     /*
                    // Transform based on time
                    int i = (int) 100.0*sin(etime/100.0);
