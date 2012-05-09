@@ -16,23 +16,27 @@ GLuint program;
 GLfloat tranMatrix[16], sizeMatrix[16], rotMatrix[16], modelMatrix[16];
 
 /* Light variables START */
-GLfloat specularExponent[] = {10.0, 20.0, 0.01, 5.0};
-GLint isDirectional[] = {0, 0, 0, 0};
+GLfloat specularExponent[] = {5.0, 5.0, 5.0, 5.0, 5.0, 5.0};
+GLint isDirectional[] = {0, 0, 0, 0, 0, 0};
 
 Point3D lightSourcesColorsArr[] =
 {
-    {1.0f, 0.0f, 0.0f}, // Red light
-    {0.0f, 1.0f, 0.0f}, // Green light
-    {0.0f, 0.0f, 1.0f}, // Blue light
+    {1.0f, 1.0f, 1.0f},  // White light
+    {1.0f, 1.0f, 1.0f},  // White light
+    {1.0f, 1.0f, 1.0f},  // White light
+    {1.0f, 1.0f, 1.0f},  // White light
+    {1.0f, 1.0f, 1.0f},  // White light
     {1.0f, 1.0f, 1.0f}  // White light
 };
 
 Point3D lightSourcesDirectionsPositions[] =
 {
-    {10.0f, 5.0f, 0.0f}, // Red light
-    {0.0f, -20.0f, -20.0f}, // Green light
-    {0.0f, 10.0f, 0.0f}, // Blue light
-    {0.0f, 0.0f, -1.0f}  // White light
+    {0.0f, 0.0f, 1.0f},  // White light
+    {0.0f, 1.0f, 0.0f},  // White light
+    {1.0f, 0.0f, 0.0f},  // White light
+    {0.0f, 0.0f,-1.0f},  // White light
+    {0.0f,-1.0f, 0.0f},  // White light
+    {-1.0f, 0.0f, 0.0f}  // White light
 
 };
 /* Light variables END */
@@ -47,7 +51,7 @@ AudioPlayer *music;
 /* Keyboard actions START */
 struct mode_type
 {
-    int cubeDim, transformation, song, amplitude, cubeColor, background;
+    int phong, cubeDim, transformation, song, amplitude, cubeColor, beat;
 }mode;
 
 char keymap[256];
@@ -73,13 +77,13 @@ void keyDown(unsigned char key, int x, int y)
     }
     else if (key == '2')
         // Change amplitude mode
-        mode.amplitude = (mode.amplitude+1) % 4;
+        mode.amplitude = (mode.amplitude+1) % 3;
     else if (key == '3')
-        // Change background mode
-        mode.background = (mode.background+1) % 2;
+        // Change beat mode
+        mode.beat = (mode.beat+1) % 3;
     else if (key == '4')
     {   // Change cube color mode
-        mode.cubeColor = (mode.cubeColor+1) % 3;
+        mode.cubeColor = (mode.cubeColor+1) % 2;
         glUniform1i(glGetUniformLocation(program, "modeCubeColor"), mode.cubeColor);
     }
     else if (key == '5')
@@ -96,6 +100,12 @@ void keyDown(unsigned char key, int x, int y)
 
         // Play music
         music->play();
+    }
+    else if (key == '6')
+    {
+        // Change Phong 
+        mode.phong = (mode.phong+1) % 2;
+        glUniform1i(glGetUniformLocation(program, "modePhong"), mode.phong);
     }
     else if (key == '+')
     {   // Increase dimensions on cube mode
@@ -121,9 +131,10 @@ void initKeymapManager()
     std::cout << std::endl
         << "1.\tChange transformation mode" << std::endl
         << "2.\tChange amplitude mode" << std::endl
-        << "3.\tChange background mode" << std::endl
+        << "3.\tChange beat mode" << std::endl
         << "4.\tChange cube color mode" << std::endl
-        << "5.\tChange song TODO" << std::endl
+        << "5.\tChange song " << std::endl
+        << "5.\tChange Phong" << std::endl
         << "+.\tDecrease dimensions on cube mode" << std::endl
         << "-.\tIncrease dimensions on cube mode" << std::endl
         << "Esc.\tQuit" << std::endl;
@@ -151,7 +162,7 @@ GLfloat projectionMatrix[] =
 
 float lookAtPosX = 0;
 float lookAtPosY = 0;
-float lookAtPosZ = 0;
+float lookAtPosZ = -4;
 
 float cameraPosX = 0;
 float cameraPosY = 0;
@@ -160,11 +171,11 @@ float drot = 0;
 
 void moveCamera(float &cameraPosX, float &cameraPosY, float &cameraPosZ){
 
-    #define SCALE 5
-    #define ROTATION 0.05
-    float tempX = (lookAtPosX - cameraPosX) / SCALE;
-    float tempY = (lookAtPosY - cameraPosY) / SCALE;
-    float tempZ = (lookAtPosZ - cameraPosZ) / SCALE;
+    #define SCALE 1.0
+    #define ROTATION 0.02
+    float tempX = (lookAtPosX - cameraPosX) * SCALE;
+    float tempY = (lookAtPosY - cameraPosY) * SCALE;
+    float tempZ = (lookAtPosZ - cameraPosZ) * SCALE;
 
     if (keyIsDown('w'))
     {
@@ -252,15 +263,16 @@ void init(void)
     printError("pre init");
 
     // Set mode values
-    mode.transformation = mode.song = mode.amplitude = mode.cubeColor = mode.background = 0;
+    mode.transformation = mode.song = mode.amplitude = mode.phong = mode.cubeColor = mode.beat = 0;
     mode.cubeDim = 5;
 
     glUniform1i(glGetUniformLocation(program, "modeCubeDim"), mode.cubeDim);
     glUniform1i(glGetUniformLocation(program, "modeCubeColor"), mode.cubeColor);
+    glUniform1i(glGetUniformLocation(program, "modePhong"), mode.phong);
 
     dumpInfo();
     // GL inits
-    glClearColor(0.3, 0.3, 0.6, 0);
+    glClearColor(0.0, 0.0, 0.0, 0);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -284,10 +296,10 @@ void init(void)
     music->play();
 
     // Load light
-    glUniform3fv(glGetUniformLocation(program, "lightSourcesDirPosArr"), 4, &lightSourcesDirectionsPositions[0].x);
-    glUniform3fv(glGetUniformLocation(program, "lightSourcesColorArr"), 4, &lightSourcesColorsArr[0].x);
-    glUniform1fv(glGetUniformLocation(program, "specularExponent"), 4, specularExponent);
-    glUniform1iv(glGetUniformLocation(program, "isDirectional"), 4, isDirectional);
+    glUniform3fv(glGetUniformLocation(program, "lightSourcesDirPosArr"), 6, &lightSourcesDirectionsPositions[0].x);
+    glUniform3fv(glGetUniformLocation(program, "lightSourcesColorArr"), 6, &lightSourcesColorsArr[0].x);
+    glUniform1fv(glGetUniformLocation(program, "specularExponent"), 6, specularExponent);
+    glUniform1iv(glGetUniformLocation(program, "isDirectional"), 6, isDirectional);
 
     // Load projection matrix
     glUniformMatrix4fv(glGetUniformLocation(program, "projMatrix"), 1, GL_TRUE, projectionMatrix);
@@ -299,17 +311,16 @@ void transformAndDrawCubes()
 {
     #define DIM mode.cubeDim
     float amplitude;
-    for (int i = 0; i < music->getNumberFrequencies(); i++)
+    for (int i = 0; i < music->getNumberFrequencies() || (mode.transformation == 0 && i < 6*DIM*DIM); i++)
     {
+        int f = i % music->getNumberFrequencies();
         switch (mode.amplitude)
         {
-            case 0: amplitude = 4 * music->getFrequencyBandBetween(i, i) / 1000000;
+            case 0: amplitude = music->getFrequencyBandBetween(f, f) / 1000000;
                     break;
-            case 1: amplitude = log(music->getFrequencyBandBetween(i, i) / music->getNumberFrequencies())/2;
+            case 1: amplitude = 4 * music->getFrequencyBandBetween(f, f) / 1000000;
                     break;
-            case 2: amplitude = log2(music->getFrequencyBandBetween(i, i) / music->getNumberFrequencies());
-                    break;
-            case 3: amplitude = music->getFrequencyBandBetween(i, i) / 1000000;
+            case 2: amplitude = log2(music->getFrequencyBandBetween(f, f) / music->getNumberFrequencies());
                     break;
         }
         if (amplitude < 0.01){
@@ -365,6 +376,12 @@ void transformAndDrawCubes()
         firstCube.draw();
     }
 }
+
+#define NUMB_AMP 2
+float preAmp[NUMB_AMP] =  {0};
+int currentAmp = 0;
+float oldLightBeat = 0;
+
 void display(void)
 {
     printError("pre display");
@@ -387,17 +404,50 @@ void display(void)
     music->doFFT();
 
 
-    /* Background color START */
-    if (mode.background == 0)
+    /* Beat START */
+    float lightBeat;
+    if (mode.beat == 0)
     {
-        float bgColor = music->getFrequencyBandBetween(0, 5) / 10000000 -0.12;
-        bgColor = bgColor > 0.0 ? 3*bgColor : 0.0;
-        glClearColor(bgColor, bgColor, bgColor, 0);
+        float bgColor = music->getFrequencyBandBetween(0, 5) / 10000000 / 6 -0.12;
+        lightBeat = bgColor > 0.0 ? 3*bgColor : 0.0;
+        glClearColor(lightBeat, lightBeat, lightBeat, 0);
+    }
+    else if (mode.beat == 1)
+    {
+        lightBeat = music->getFrequencyBandBetween(0, 5) / 10000000/6 -0.12;
+        if (lightBeat < 0.2)
+            lightBeat = 0.2;
+        glClearColor(0.0, 0.0, 0.0, 0.0);
     }
     else
+    {
         glClearColor(0.0, 0.0, 0.0, 0.0);
-    /* Background color END */
+        lightBeat = 1.0; 
+    }
 
+    /* Filter START */ 
+    preAmp[currentAmp] = lightBeat;
+    currentAmp = (currentAmp+1) % NUMB_AMP;
+    lightBeat = 0;
+    for(int i = 0; i < NUMB_AMP; i++)
+    {
+        lightBeat += preAmp[i];
+    }
+    lightBeat /= NUMB_AMP;
+    oldLightBeat -= 0.05;
+    lightBeat = (lightBeat > oldLightBeat ? lightBeat : oldLightBeat);
+    //TODO:std::cout << lightBeat << std::endl;
+    oldLightBeat = lightBeat;
+    /* Filter END */
+    
+    if (mode.beat == 0)
+        glUniform1f(glGetUniformLocation(program, "lightBeat"), 1.0);
+    else
+        glUniform1f(glGetUniformLocation(program, "lightBeat"), lightBeat);
+    
+    /* Beat END */
+    
+    
     // Clear screen
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 

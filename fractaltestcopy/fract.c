@@ -166,7 +166,7 @@ void lookAt(GLfloat px, GLfloat py, GLfloat pz,
 
 char keymap[256];
 
-#define size 26 // size = antal fasta punkter kameran skall passera = control points
+#define size 29 // size = antal fasta punkter kameran skall passera = control points
 #define numPoints 25 // numpoints = antal punkter som genereras mellan två control points
 
 int step[2]={0,0};
@@ -482,7 +482,7 @@ void init(void)
     SetVector(40, 40, 40, &asdf2[26]); 
     SetVector(40, 40, 40, &asdf2[27]); 
     SetVector(40, 40, 40, &asdf2[28]); 
-    
+
     mode.demo = 1;
 
 	createMovement(asdf,path);
@@ -620,10 +620,12 @@ void display(){
             if(step[1]==16)
             {
                 mode.lightBeat = 1;
-                mode.wait=1;
+                if(s <30)
+                    mode.wait=1;
             }
-            if(step[1]==20)
+            if(step[1]==27)
             {
+                mode.cubeScaling = 2;
             }
             if(step[1]==25)
             {
@@ -636,19 +638,17 @@ void display(){
         {
            mode.cubeScaling = 2; 
         }
-        
     }
-    else if(s <= 30)
+    else if(s == 30)
     {
-        mode.wait=0;
         mode.lightBeat=0;
-    }
-    else if(s <= 50)
-    {
         mode.cubeScaling = 1;
     }
-    else
+    else if(s == 50)
+    {
+        mode.wait=0;
         mode.cubeScaling = 2;
+    }
 
     // Transformation matrices
     GLfloat camera[16], trans[16], skyboxMatrix[16], scaling[16];
@@ -663,6 +663,7 @@ void display(){
 
     if(printtime < floor(etime/1000))
     {
+
         s++;
         printtime = floor(etime/1000);
         if(mode.print ==1){
