@@ -148,6 +148,40 @@ void lookAt(GLfloat px, GLfloat py, GLfloat pz,
 
 char keymap[256];
 
+#define size 5 // size = antal fasta punkter kameran skall passera = control points
+#define numPoints 10 // numpoints = antal punkter som genereras mellan två control points
+
+int step[2]={0,0};
+Point3D path[size][numPoints];
+Point3D lpath[size][numPoints];
+void createMovement(Point3D cp[size], Point3D ret[size][numPoints])
+{
+	int i,j;
+	Point3D dist;
+	for(i=0;i<size;i++)
+	{
+		if (i!=size-1)
+		{	
+			VectorSub(&cp[i+1],&cp[i],&dist);
+			for (j=0;j<numPoints;j++)
+			{
+				ret[i][j].x = cp[i].x + j*(dist.x/numPoints);
+				ret[i][j].y = cp[i].y + j*(dist.y/numPoints);
+				ret[i][j].z = cp[i].z + j*(dist.z/numPoints);					 
+			}
+		}
+		else
+		{
+			for (j=0;j<numPoints;j++)
+			{
+				ret[i][j].x = cp[i].x;
+				ret[i][j].y = cp[i].y;
+				ret[i][j].z = cp[i].z;					 
+			}
+		}
+	}
+}
+
 char keyIsDown(unsigned char c)
 {
 	return keymap[(unsigned int)c];
@@ -350,7 +384,21 @@ void lookAt(GLfloat px, GLfloat py, GLfloat pz,
 void init(void)
 {
 	dumpInfo();
-
+	// TODO set asdf to control points
+	Point3D asdf[size];
+	SetVector(0.0,0.0,0.0,&asdf[0]);
+	SetVector(2.5,3.0,1.0,&asdf[1]);
+	SetVector(4.7,1.0,2.0,&asdf[2]);
+	SetVector(5.3,4.0,4.0,&asdf[3]);
+	SetVector(8.9,8.0,7.0,&asdf[4]);
+	Point3D asdf2[size];
+	SetVector(0.1,0.0,0.0,&asdf[0]);
+	SetVector(2.6,3.0,1.0,&asdf[1]);
+	SetVector(4.8,1.0,2.0,&asdf[2]);
+	SetVector(5.9,4.0,4.0,&asdf[3]);
+	SetVector(8.3,8.0,7.0,&asdf[4]);
+	createMovement(asdf,path);
+	createMovement(asdf2,lpath);
     mode.song = 0;
     mode.cubeScaling = 0;
     mode.lightBeat = 0;
@@ -463,14 +511,19 @@ void display(){
         moveCamera();
     else
     {
-        //Move camera automaticly
-        Point3D goalPoint;
-        SetVector(-40,-100,100,&goalPoint);
-        moveToPoint(&campos,goalPoint); 
-        //Move look at position automaticly
-        SetVector(0,10,5,&goalPoint);
-        moveToPoint(&lookat,goalPoint); 
-        printPosition();
+        if (step[1] != size)
+		{
+		campos = path[step[1]][step[0]];
+		lookat = lpath[step[1]][step[0]];
+	//printf("step: %d,%d x: %f y: %f z: %f \n",step[1],step[0],path[step[1]][step[0]].x,path[step[1]][step[0]].y,path[step[1]][step[0]].z);
+		step[0]++;
+		if (step[0]==numPoints)
+		{
+			step[1]++;
+			step[0]=0;
+		//printf("---\n");
+		}
+}
     } 
     // Transformation matrices
     GLfloat camera[16], trans[16], skyboxMatrix[16], scaling[16];
