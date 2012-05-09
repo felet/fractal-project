@@ -166,7 +166,7 @@ void lookAt(GLfloat px, GLfloat py, GLfloat pz,
 char keymap[256];
 
 #define size 26 // size = antal fasta punkter kameran skall passera = control points
-#define numPoints 30 // numpoints = antal punkter som genereras mellan två control points
+#define numPoints 25 // numpoints = antal punkter som genereras mellan två control points
 
 int step[2]={0,0};
 Point3D path[size][numPoints];
