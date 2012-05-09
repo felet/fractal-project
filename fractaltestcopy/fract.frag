@@ -39,32 +39,32 @@ bool isFilled(int x, int y)
 }
 
 vec4 phong(){
-		vec3 nNormal = normalize(normal);
-        vec3 eyePosition = vec3(0.0);
-        vec3 eyeDirection = normalize(eyePosition-position_to_frag);
-        vec3 lightDirection[4], reflectedLightDirection[4];
-        vec4 lightColor[4];
-        float diffuseStrength[4], specularStrength[4];
-        for (int i=0;i<4;i++)
-        {
-            if (isDirectional[i])
-                lightDirection[i] = normalize(lightSourcesDirPosArr[i]);
-            else
-                lightDirection[i] = normalize(lightSourcesDirPosArr[i]-position_to_frag);
+    vec3 nNormal = normalize(normal);
+    vec3 eyePosition = vec3(0.0);
+    vec3 eyeDirection = normalize(eyePosition-position_to_frag);
+    vec3 lightDirection[4], reflectedLightDirection[4];
+    vec4 lightColor[4];
+    float diffuseStrength[4], specularStrength[4];
+    for (int i=0;i<4;i++)
+    {
+        if (isDirectional[i])
+            lightDirection[i] = normalize(lightSourcesDirPosArr[i]);
+        else
+            lightDirection[i] = normalize(lightSourcesDirPosArr[i]-position_to_frag);
 
-            reflectedLightDirection[i] = normalize(-reflect(lightDirection[i],nNormal));
-            lightColor[i] = vec4(lightSourcesColorArr[i],1.0);
-            diffuseStrength[i] = max(dot(lightDirection[i],nNormal),0);
-            if (diffuseStrength[i] > 0.0)
-            {
-                specularStrength[i] = pow(max(dot(reflectedLightDirection[i],eyeDirection),0.01),specularExponent[i]);
-            }
+        reflectedLightDirection[i] = normalize(-reflect(lightDirection[i],nNormal));
+        lightColor[i] = vec4(lightSourcesColorArr[i],1.0);
+        diffuseStrength[i] = max(dot(lightDirection[i],nNormal),0);
+        if (diffuseStrength[i] > 0.0)
+        {
+            specularStrength[i] = pow(max(dot(reflectedLightDirection[i],eyeDirection),0.01),specularExponent[i]);
         }
-        vec4 sum=vec4(0.0);
-        for(int i=0;i<4;i++)
-            sum += (diffuseStrength[i]+specularStrength[i])*lightColor[i]*lightBeat;
-        if(setTexture != 1)
-            sum *= texture(texUnit,texCoord);
+    }
+    vec4 sum=vec4(0.0);
+    for(int i=0;i<4;i++)
+        sum += (diffuseStrength[i]+specularStrength[i])*lightColor[i]*lightBeat;
+    if(setTexture != 1)
+        sum *= texture(texUnit,texCoord);
 	return sum;
 }
 void main(void)
@@ -76,14 +76,14 @@ void main(void)
     else if (setTexture==0)
         out_Color = texture(texUnit,texCoord);
     else if (setTexture==2)
-        {
-			vec2 temp = texCoord;
-			temp *= 1000.0;
-			if(isFilled(int(temp.x), int(temp.y)))
-				out_Color = phong()*vec4(1.0, cos(time/1000.0) , sin(time/800.0), 1.0);
-			else
-				out_Color = vec4(0.0);
-		}
+    {
+        vec2 temp = texCoord;
+        temp *= 1000.0;
+        if(isFilled(int(temp.x), int(temp.y)))
+            out_Color = phong()*vec4(1.0, cos(time/10000.0) , sin(time/10200.0), 1.0);
+        else
+            out_Color = vec4(0.0);
+	}
 	else
         out_Color = vec4(0.0);
 }

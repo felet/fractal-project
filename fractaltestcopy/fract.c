@@ -443,7 +443,7 @@ void display(){
     // Light beat
     float lightBeat;
     if (mode.lightBeat == 1)
-        lightBeat = getBeat();
+        lightBeat = 1.0 - getBeat();
     else
         lightBeat = 1.0;
     glUniform1f(glGetUniformLocation(program, "lightBeat"), lightBeat);
