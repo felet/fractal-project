@@ -6,8 +6,16 @@
     - MengerSponge
     - BeatDetection
 
-    To compile one of them, just go into one of the program's directory and run make. It will create a file "MengerSponge" or "BeatDetection". You can run one of them by typing "./MengerSponge" or "./BeatDetection".
-    OBS: To be able to run the program you need to place a WAVE file called "sound0.wav" in the same directory. The WAVE file have to be stereo, 16-bit samples with 44100 Hz as sample rate. If you want to change audio file while the program is running just add more files with the same name and increment the number by one. You can have up to 5 audio files.  "sound0.wav", "sound1.wav" ... "sound4.wav"
+    To compile one of them, just go into one of the program's directory
+    and run make. It will create a file "MengerSponge" or
+    "BeatDetection". You can run one of them by typing "./MengerSponge"
+    or "./BeatDetection".
+    OBS: To be able to run the program you need to place a WAVE file
+    called "sound0.wav" in the same directory. The WAVE file have to be
+    stereo, 16-bit samples with 44100 Hz as sample rate. If you want to
+    change audio file while the program is running just add more files
+    with the same name and increment the number by one. You can have up
+    to 5 audio files.  "sound0.wav", "sound1.wav" ... "sound4.wav"
 
 [ Menger Sponge - Keyboard controls ]
     w       Move forward
