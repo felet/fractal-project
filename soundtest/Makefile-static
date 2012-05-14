@@ -1,5 +1,0 @@
-all:
-	g++ -Wall -lGL -lglut -DGL_GLEXT_PROTOTYPES -I/home/erik/fftw/include -L/home/erik/fftw/lib -Wl,-Bstatic -lfftw3 -Wl,-Bdynamic /home/erik/Desktop/openal-soft-1.14/libopenal.so -I/home/erik/Desktop/openal-soft-1.14/include main.cpp GL_utilities.c VectorUtils2.c loadobj.c Cube.cpp AudioPlayer.cpp
-
-clean:
-	rm a.out

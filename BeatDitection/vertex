@@ -1,0 +1,21 @@
+#version 150
+
+uniform mat4 projMatrix;
+uniform mat4 camMatrix;
+uniform mat4 modelMatrix;
+
+// For object
+in vec3 vert_Position;
+in vec3 vert_Normal;
+in vec2 vert_TextCoord;
+
+out vec3 frag_Position;
+out vec3 frag_Normal;
+
+void main(void)
+{
+	gl_Position = projMatrix * camMatrix * modelMatrix * vec4(vert_Position, 1.0);
+
+    frag_Normal = normalize(mat3(modelMatrix) * normalize(vert_Normal));
+    frag_Position = vec3(modelMatrix * vec4(vert_Position, 1.0));
+}

@@ -1,1 +1,46 @@
-ASDF
+[ Installation on Ubuntu 12.04 ]
+    Run follow command to install needed package
+    #sudo apt-get g++ freeglut3-dev libopenal-dev libfftw3-dev binutils-gold build-essential
+
+    There are to different programmes:
+    - MengerSponge
+    - BeatDetection
+
+    To compile one of them, just go into one of the program's directory and run make. It will create a file "MengerSponge" or "BeatDetection". You can run one of them by typing "./MengerSponge" or "./BeatDetection".
+    OBS: To be able to run the program you need to place a WAVE file called "sound0.wav" in the same directory. The WAVE file have to be stereo, 16-bit samples with 44100 Hz as sample rate. If you want to change audio file while the program is running just add more files with the same name and increment the number by one. You can have up to 5 audio files.  "sound0.wav", "sound1.wav" ... "sound4.wav"
+
+[ Menger Sponge - Keyboard controls ]
+    w       Move forward
+    s       Move backward
+    a       Look left
+    d       Look right
+    p       Look up
+    l       Look down
+    c       Turn off demo (camera movement)
+    2       Change cube scaling
+    3       Change light beat
+    5       Change song
+    +       Increase scaling time speed
+    -       Decrease scaling time speed
+    n       Increase recalc sponge
+    m       Decrease dimensions on cube
+    Space	Pause clock
+    Esc	    Quit
+
+
+[ Beat Detection - Keyboard controls ]
+    w       Move forward
+    s       Move backward
+    a       Look left
+    d       Look right
+    p       Look up
+    l       Look down
+    1       Change transformation mode
+    2       Change amplitude mode
+    3       Change beat mode
+    4       Change cube color mode
+    5       Change song
+    5       Change Phong
+    +       Decrease dimensions on cube mode
+    -       Increase dimensions on cube mode
+    Esc     Quit
