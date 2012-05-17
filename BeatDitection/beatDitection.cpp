@@ -169,11 +169,11 @@ GLfloat projectionMatrix[] =
 
 float lookAtPosX = 0;
 float lookAtPosY = 0;
-float lookAtPosZ = -4;
+float lookAtPosZ = -19;
 
 float cameraPosX = 0;
 float cameraPosY = 0;
-float cameraPosZ = -5;
+float cameraPosZ = -20;
 float drot = 0;
 
 void moveCamera(float &cameraPosX, float &cameraPosY, float &cameraPosZ){
